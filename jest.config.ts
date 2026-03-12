@@ -14,6 +14,9 @@ const config: Config = {
       },
     }],
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(nanoid)/)',
+  ],
 }
 
 export default config
