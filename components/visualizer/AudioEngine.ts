@@ -6,8 +6,8 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null
   private source: MediaStreamAudioSourceNode | null = null
   private stream: MediaStream | null = null
-  private fftBuffer: Float32Array = new Float32Array(0)
-  private waveBuffer: Float32Array = new Float32Array(0)
+  private fftBuffer: Float32Array<ArrayBuffer> = new Float32Array(0)
+  private waveBuffer: Float32Array<ArrayBuffer> = new Float32Array(0)
 
   constructor(config: PresetConfig) {
     this.config = config

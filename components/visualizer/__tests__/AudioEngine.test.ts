@@ -39,9 +39,10 @@ const mockAudioContext = {
 global.AudioContext = jest.fn().mockImplementation(() => mockAudioContext) as any
 
 const mockStream = { getTracks: () => [{ stop: jest.fn() }] }
-global.navigator.mediaDevices = {
-  getUserMedia: jest.fn().mockResolvedValue(mockStream),
-} as any
+Object.defineProperty(global.navigator, 'mediaDevices', {
+  writable: true,
+  value: { getUserMedia: jest.fn().mockResolvedValue(mockStream) },
+})
 
 describe('AudioEngine', () => {
   beforeEach(() => jest.clearAllMocks())
