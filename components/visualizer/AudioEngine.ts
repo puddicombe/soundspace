@@ -7,6 +7,7 @@ export class AudioEngine {
   private source: MediaStreamAudioSourceNode | null = null
   private stream: MediaStream | null = null
   private fftBuffer: Float32Array<ArrayBuffer> = new Float32Array(0)
+  private fftResult: Float32Array<ArrayBuffer> = new Float32Array(0)
   private waveBuffer: Float32Array<ArrayBuffer> = new Float32Array(0)
 
   constructor(config: PresetConfig) {
@@ -25,6 +26,7 @@ export class AudioEngine {
     this.analyser.fftSize = this.config.fftSize
 
     this.fftBuffer = new Float32Array(this.analyser.frequencyBinCount)
+    this.fftResult = new Float32Array(this.analyser.frequencyBinCount)
     this.waveBuffer = new Float32Array(this.analyser.fftSize)
 
     this.source = this.audioContext.createMediaStreamSource(this.stream)
@@ -35,12 +37,11 @@ export class AudioEngine {
     if (!this.analyser) return new Float32Array(0)
     this.analyser.getFloatFrequencyData(this.fftBuffer)
     const sensitivity = this.config.sensitivity
-    const result = new Float32Array(this.fftBuffer.length)
     for (let i = 0; i < this.fftBuffer.length; i++) {
       const normalised = (this.fftBuffer[i] + 160) / 160
-      result[i] = Math.min(1, Math.max(0, normalised * sensitivity))
+      this.fftResult[i] = Math.min(1, Math.max(0, normalised * sensitivity))
     }
-    return result
+    return this.fftResult
   }
 
   getRawWaveform(): Float32Array {

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import type { PresetConfig, BarsConfig } from '@/lib/validations/preset'
+import { COLOR_SCHEMES, FFT_SIZES } from '@/lib/validations/preset'
 
 interface Props {
   config: PresetConfig
@@ -16,8 +17,6 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
 
   const isBars = config.type === 'bars'
   const barsConfig = config as BarsConfig
-
-  const COLOR_SCHEMES = ['neon-dark', 'sunset', 'mono', 'ocean'] as const
 
   return (
     <>
@@ -138,7 +137,7 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
               onChange={(e) => onConfigChange({ ...config, fftSize: parseInt(e.target.value) as 512 | 1024 | 2048 | 4096 } as PresetConfig)}
               className="bg-white/10 text-white rounded px-2 py-1 text-sm"
             >
-              {[512, 1024, 2048, 4096].map((s) => (
+              {FFT_SIZES.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>

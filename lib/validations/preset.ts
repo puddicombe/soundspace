@@ -1,6 +1,9 @@
 import { z } from 'zod'
 
-const colorSchemeSchema = z.enum(['neon-dark', 'sunset', 'mono', 'ocean'])
+export const COLOR_SCHEMES = ['neon-dark', 'sunset', 'mono', 'ocean'] as const
+export const FFT_SIZES = [512, 1024, 2048, 4096] as const
+
+const colorSchemeSchema = z.enum(COLOR_SCHEMES)
 
 const baseConfigSchema = z.object({
   colorScheme: colorSchemeSchema,

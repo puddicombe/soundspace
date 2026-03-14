@@ -13,6 +13,9 @@ export class BarsRenderer implements BaseRenderer {
   private width: number
   private height: number
   private config: BarsConfig
+  private gradient: CanvasGradient | null = null
+  private gradientScheme: string = ''
+  private gradientHeight: number = 0
 
   constructor(canvas: HTMLCanvasElement, config: BarsConfig) {
     const ctx = canvas.getContext('2d')
@@ -35,10 +38,14 @@ export class BarsRenderer implements BaseRenderer {
     const barWidth = width / totalBars
     const gap = Math.max(1, barWidth * 0.1)
 
-    const gradient = ctx.createLinearGradient(0, height, 0, 0)
-    gradient.addColorStop(0, colorA)
-    gradient.addColorStop(1, colorB)
-    ctx.fillStyle = gradient
+    if (!this.gradient || colorScheme !== this.gradientScheme || height !== this.gradientHeight) {
+      this.gradient = ctx.createLinearGradient(0, height, 0, 0)
+      this.gradient.addColorStop(0, colorA)
+      this.gradient.addColorStop(1, colorB)
+      this.gradientScheme = colorScheme
+      this.gradientHeight = height
+    }
+    ctx.fillStyle = this.gradient
 
     for (let i = 0; i < barCount; i++) {
       const value = fftData[i] ?? 0
@@ -61,6 +68,7 @@ export class BarsRenderer implements BaseRenderer {
   resize(width: number, height: number): void {
     this.width = width
     this.height = height
+    this.gradient = null
   }
 
   destroy(): void {

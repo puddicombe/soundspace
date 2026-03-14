@@ -3,15 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { nanoid } from 'nanoid'
+import { getOwnedPreset } from '@/lib/presets'
 
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const preset = await prisma.preset.findUnique({ where: { id: params.id } })
-  if (!preset || preset.userId !== session.user.id) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
+  const preset = await getOwnedPreset(params.id, session.user.id)
+  if (!preset) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const baseUrl = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
 

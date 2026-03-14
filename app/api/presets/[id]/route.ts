@@ -3,13 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { updatePresetSchema } from '@/lib/validations/preset'
-
-async function getOwnedPreset(id: string, userId: string) {
-  const preset = await prisma.preset.findUnique({ where: { id } })
-  if (!preset) return null
-  if (preset.userId !== userId) return null
-  return preset
-}
+import { getOwnedPreset } from '@/lib/presets'
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
