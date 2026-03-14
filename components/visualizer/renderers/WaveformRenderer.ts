@@ -23,7 +23,8 @@ export class WaveformRenderer implements BaseRenderer {
     this.config = config
   }
 
-  render(_fftData: Float32Array, waveData: Float32Array): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  render(_fftData: Float32Array, waveData: Float32Array, _features: import('../AudioFeatures').AudioFeatures): void {
     const { ctx, width, height, config } = this
     ctx.clearRect(0, 0, width, height)
 

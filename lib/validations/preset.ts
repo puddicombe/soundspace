@@ -24,9 +24,24 @@ export const waveformConfigSchema = baseConfigSchema.extend({
   type: z.literal('waveform'),
 })
 
+export const spectrumConfigSchema = baseConfigSchema.extend({
+  type: z.literal('spectrum'),
+})
+
+export const featuresConfigSchema = baseConfigSchema.extend({
+  type: z.literal('features'),
+})
+
+export const chordsConfigSchema = baseConfigSchema.extend({
+  type: z.literal('chords'),
+})
+
 export const presetConfigSchema = z.discriminatedUnion('type', [
   barsConfigSchema,
   waveformConfigSchema,
+  spectrumConfigSchema,
+  featuresConfigSchema,
+  chordsConfigSchema,
 ])
 
 export const createPresetSchema = z.object({
@@ -43,4 +58,7 @@ export const updatePresetSchema = z.object({
 // TypeScript types derived from schemas
 export type BarsConfig = z.infer<typeof barsConfigSchema>
 export type WaveformConfig = z.infer<typeof waveformConfigSchema>
+export type SpectrumConfig = z.infer<typeof spectrumConfigSchema>
+export type FeaturesConfig = z.infer<typeof featuresConfigSchema>
+export type ChordsConfig = z.infer<typeof chordsConfigSchema>
 export type PresetConfig = z.infer<typeof presetConfigSchema>

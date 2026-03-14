@@ -27,7 +27,7 @@ describe('WaveformRenderer', () => {
     const beginPathSpy = jest.spyOn(ctx, 'beginPath')
     const strokeSpy = jest.spyOn(ctx, 'stroke')
 
-    renderer.render(new Float32Array(1024), new Float32Array(2048).fill(0.5))
+    renderer.render(new Float32Array(1024), new Float32Array(2048).fill(0.5), {} as import('../../AudioFeatures').AudioFeatures)
 
     expect(beginPathSpy).toHaveBeenCalled()
     expect(strokeSpy).toHaveBeenCalled()

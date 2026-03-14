@@ -27,7 +27,7 @@ export class BarsRenderer implements BaseRenderer {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  render(fftData: Float32Array, _waveData: Float32Array): void {
+  render(fftData: Float32Array, _waveData: Float32Array, _features: import('../AudioFeatures').AudioFeatures): void {
     const { ctx, width, height, config } = this
     const { barCount, mirrorBars, colorScheme } = config
     const [colorA, colorB] = COLOR_MAP[colorScheme]
@@ -48,7 +48,8 @@ export class BarsRenderer implements BaseRenderer {
     ctx.fillStyle = this.gradient
 
     for (let i = 0; i < barCount; i++) {
-      const value = fftData[i] ?? 0
+      const binIndex = Math.floor(i * fftData.length / barCount)
+      const value = fftData[binIndex] ?? 0
       const barHeight = value * height
 
       if (mirrorBars) {

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import type { PresetConfig, BarsConfig } from '@/lib/validations/preset'
+import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig } from '@/lib/validations/preset'
 import { COLOR_SCHEMES, FFT_SIZES } from '@/lib/validations/preset'
 
 interface Props {
@@ -45,12 +45,22 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
           <div className="flex flex-col gap-2">
             <label className="text-gray-400 text-xs uppercase tracking-wider">Type</label>
             <div className="flex gap-2">
-              {(['bars', 'waveform'] as const).map((t) => (
+              {(['bars', 'waveform', 'spectrum', 'features', 'chords'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => {
                     if (t === 'waveform') {
                       onConfigChange({ type: 'waveform', colorScheme: config.colorScheme, fftSize: config.fftSize, sensitivity: config.sensitivity })
+                    } else if (t === 'spectrum') {
+                      // Spectrum needs high FFT resolution for smooth log-scale display; use at least 4096
+                      const fftSize = config.fftSize < 4096 ? 4096 : config.fftSize
+                      onConfigChange({ type: 'spectrum', colorScheme: config.colorScheme, fftSize, sensitivity: config.sensitivity } as SpectrumConfig)
+                    } else if (t === 'features') {
+                      const fftSize = config.fftSize < 2048 ? 2048 : config.fftSize
+                      onConfigChange({ type: 'features', colorScheme: config.colorScheme, fftSize, sensitivity: config.sensitivity } as FeaturesConfig)
+                    } else if (t === 'chords') {
+                      const fftSize = config.fftSize < 2048 ? 2048 : config.fftSize
+                      onConfigChange({ type: 'chords', colorScheme: config.colorScheme, fftSize, sensitivity: config.sensitivity } as ChordsConfig)
                     } else {
                       onConfigChange({
                         type: 'bars', colorScheme: config.colorScheme, fftSize: config.fftSize,

@@ -30,6 +30,7 @@ const mockSourceNode = { connect: mockConnect, disconnect: mockDisconnect }
 
 const mockAudioContext = {
   state: 'suspended',
+  sampleRate: 44100,
   resume: mockResume,
   createAnalyser: jest.fn().mockReturnValue(mockAnalyser),
   createMediaStreamSource: jest.fn().mockReturnValue(mockSourceNode),
@@ -60,11 +61,11 @@ describe('AudioEngine', () => {
   })
 
   it('getProcessedFFT normalises and clamps values', async () => {
-    mockGetFloatFrequencyData.mockImplementation((buf: Float32Array) => buf.fill(-80))
+    mockGetFloatFrequencyData.mockImplementation((buf: Float32Array) => buf.fill(0))
     const engine = new AudioEngine({ ...baseConfig, sensitivity: 2.0 })
     await engine.start()
     const result = engine.getProcessedFFT()
-    // (-80 + 160) / 160 = 0.5, * 2.0 = 1.0, clamped to 1.0
+    // (0 + 80) / 80 = 1.0, * 2.0 = 2.0, clamped to 1.0
     expect(result[0]).toBeCloseTo(1.0)
   })
 

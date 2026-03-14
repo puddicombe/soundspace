@@ -32,7 +32,7 @@ describe('BarsRenderer', () => {
 
     const fft = new Float32Array(64).fill(0.5)
     const wave = new Float32Array(2048)
-    renderer.render(fft, wave)
+    renderer.render(fft, wave, {} as import('../../AudioFeatures').AudioFeatures)
 
     expect(clearSpy).toHaveBeenCalled()
     expect(fillSpy).toHaveBeenCalled()
