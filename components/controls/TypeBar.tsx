@@ -1,7 +1,7 @@
 'use client'
 import type { PresetConfig } from '@/lib/validations/preset'
 
-const TYPES = ['bars', 'waveform', 'spectrum', 'features', 'chords'] as const
+const TYPES = ['bars', 'waveform', 'spectrum', 'features', 'chords', 'plasma'] as const
 export type VisualizerType = typeof TYPES[number]
 
 interface Props {
@@ -44,6 +44,10 @@ export function buildConfigForType(type: VisualizerType, current: PresetConfig):
   if (type === 'features' || type === 'chords') {
     const fftSize = current.fftSize < 2048 ? 2048 : current.fftSize
     return { ...base, type, fftSize } as PresetConfig
+  }
+  if (type === 'plasma') {
+    // plasma has no fftSize minimum — pass through unchanged
+    return { ...base, type: 'plasma', fftSize: current.fftSize } as PresetConfig
   }
   // bars
   return { ...base, type: 'bars', fftSize: current.fftSize, barCount: 64, mirrorBars: true }
