@@ -11,7 +11,7 @@ interface Props {
   onConfigChange?: (config: PresetConfig) => void  // optional — share page renders read-only
 }
 
-export function VisualizerCanvas({ config, onConfigChange }: Props) {
+export function VisualizerCanvas({ config }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<AudioEngine | null>(null)
   const rendererRef = useRef<BaseRenderer | null>(null)
@@ -74,7 +74,7 @@ export function VisualizerCanvas({ config, onConfigChange }: Props) {
       engineRef.current = engine
       rendererRef.current = buildRenderer(canvas, config)
       setStarted(true)
-    } catch (err) {
+    } catch {
       setMicError('Microphone access denied. Please allow mic access and refresh.')
     }
   }

@@ -36,7 +36,7 @@ const mockAudioContext = {
   close: jest.fn().mockResolvedValue(undefined),
 }
 
-global.AudioContext = jest.fn().mockImplementation(() => mockAudioContext) as any
+global.AudioContext = jest.fn().mockImplementation(() => mockAudioContext) as unknown as typeof AudioContext
 
 const mockStream = { getTracks: () => [{ stop: jest.fn() }] }
 Object.defineProperty(global.navigator, 'mediaDevices', {

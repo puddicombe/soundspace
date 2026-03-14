@@ -23,6 +23,7 @@ export class BarsRenderer implements BaseRenderer {
     this.config = config
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   render(fftData: Float32Array, _waveData: Float32Array): void {
     const { ctx, width, height, config } = this
     const { barCount, mirrorBars, colorScheme } = config
