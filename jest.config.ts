@@ -6,6 +6,7 @@ const config: Config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^nanoid$': '<rootDir>/__mocks__/nanoid.ts',
   },
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
