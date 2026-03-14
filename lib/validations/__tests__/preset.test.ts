@@ -67,6 +67,26 @@ describe('presetConfigSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('accepts valid plasma config', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'plasma',
+      colorScheme: 'neon-dark',
+      sensitivity: 1.0,
+      fftSize: 2048,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects plasma config with invalid colorScheme', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'plasma',
+      colorScheme: 'rainbow',
+      sensitivity: 1.0,
+      fftSize: 2048,
+    })
+    expect(result.success).toBe(false)
+  })
+
   it('rejects sensitivity out of range', () => {
     const result = presetConfigSchema.safeParse({
       type: 'bars',
