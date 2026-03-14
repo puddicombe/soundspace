@@ -39,7 +39,7 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
         <div className="p-4 flex flex-col gap-5 overflow-y-auto h-full">
           <div className="flex items-center justify-between pt-2">
             <span className="text-white/60 text-sm">{session?.user.email}</span>
-            <button onClick={() => signOut()} className="text-gray-400 hover:text-white text-sm">Sign out</button>
+            <button onClick={() => signOut({ callbackUrl: '/signin' })} className="text-gray-400 hover:text-white text-sm">Sign out</button>
           </div>
 
           {/* Visualiser type */}

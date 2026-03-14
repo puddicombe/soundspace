@@ -8,7 +8,6 @@ import type { PresetConfig } from '@/lib/validations/preset'
 
 interface Props {
   config: PresetConfig
-  onConfigChange?: (config: PresetConfig) => void  // optional — share page renders read-only
 }
 
 export function VisualizerCanvas({ config }: Props) {
@@ -64,6 +63,15 @@ export function VisualizerCanvas({ config }: Props) {
     rafRef.current = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(rafRef.current)
   }, [started])
+
+  // Restart engine when fftSize changes (requires full AudioContext teardown)
+  useEffect(() => {
+    if (!started || !engineRef.current) return
+    engineRef.current.restart(config).catch(() => {
+      setMicError('Microphone access lost after FFT size change.')
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.fftSize])
 
   async function handleStart() {
     const canvas = canvasRef.current

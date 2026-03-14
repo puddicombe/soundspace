@@ -36,7 +36,7 @@ export default function VisualizerPage() {
 
   return (
     <>
-      <VisualizerCanvas config={config} onConfigChange={setConfig} />
+      <VisualizerCanvas config={config} />
       <ControlPanel
         config={config}
         onConfigChange={setConfig}

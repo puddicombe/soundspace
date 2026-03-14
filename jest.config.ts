@@ -18,6 +18,8 @@ const config: Config = {
   transformIgnorePatterns: [
     '/node_modules/(?!(nanoid)/)',
   ],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  watchPathIgnorePatterns: ['/node_modules/', '/.next/'],
 }
 
 export default config
