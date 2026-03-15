@@ -38,7 +38,6 @@ export function VisualizerCanvas({ config }: Props) {
     if (cfg.type === 'spectrum') return new SpectrumRenderer(canvas, cfg as SpectrumConfig)
     if (cfg.type === 'features') return new FeaturesRenderer(canvas, cfg as FeaturesConfig)
     if (cfg.type === 'chords') return new ChordsRenderer(canvas, cfg as ChordsConfig)
-    if (cfg.type === 'plasma') return new WaveformRenderer(canvas, cfg as any) // TODO: replace with PlasmaRenderer
     return new WaveformRenderer(canvas, cfg)
   }, [])
 
