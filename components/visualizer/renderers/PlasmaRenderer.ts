@@ -169,6 +169,11 @@ export class PlasmaRenderer implements BaseRenderer {
   private uSwAge: WebGLUniformLocation
   private uSwStrength: WebGLUniformLocation
 
+  // Pre-allocated shock wave upload buffers (avoids hot-path GC pressure)
+  private swOrigins   = new Float32Array(16)
+  private swAges      = new Float32Array(8)
+  private swStrengths = new Float32Array(8)
+
   constructor(canvas: HTMLCanvasElement, _config: PlasmaConfig) {
     const gl = canvas.getContext('webgl2')
     if (!gl) throw new Error('WebGL2 not supported in this browser.')
@@ -275,19 +280,16 @@ export class PlasmaRenderer implements BaseRenderer {
     gl.uniform3fv(this.uPaletteD, pd)
     gl.uniform1i(this.uSwCount, this.shockwaves.length)
 
-    // Pack shock wave arrays
-    const origins   = new Float32Array(16)
-    const ages      = new Float32Array(8)
-    const strengths = new Float32Array(8)
+    // Pack shock wave arrays into pre-allocated buffers
     this.shockwaves.forEach((sw, i) => {
-      origins[i * 2]     = sw.x
-      origins[i * 2 + 1] = sw.y
-      ages[i]            = sw.age
-      strengths[i]       = sw.strength
+      this.swOrigins[i * 2]     = sw.x
+      this.swOrigins[i * 2 + 1] = sw.y
+      this.swAges[i]            = sw.age
+      this.swStrengths[i]       = sw.strength
     })
-    gl.uniform2fv(this.uSwOrigin,   origins)
-    gl.uniform1fv(this.uSwAge,      ages)
-    gl.uniform1fv(this.uSwStrength, strengths)
+    gl.uniform2fv(this.uSwOrigin,   this.swOrigins)
+    gl.uniform1fv(this.uSwAge,      this.swAges)
+    gl.uniform1fv(this.uSwStrength, this.swStrengths)
 
     // Draw
     gl.clear(gl.COLOR_BUFFER_BIT)
