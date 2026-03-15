@@ -6,11 +6,12 @@ import { WaveformRenderer } from './renderers/WaveformRenderer'
 import { SpectrumRenderer } from './renderers/SpectrumRenderer'
 import { FeaturesRenderer } from './renderers/FeaturesRenderer'
 import { ChordsRenderer } from './renderers/ChordsRenderer'
+import { PlasmaRenderer } from './renderers/PlasmaRenderer'
 import { ChordTestOverlay } from './ChordTestOverlay'
 import type { BaseRenderer } from './renderers/BaseRenderer'
 import type { AudioFeatures } from './AudioFeatures'
 import { NULL_FEATURES } from './AudioFeatures'
-import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig } from '@/lib/validations/preset'
+import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig, PlasmaConfig } from '@/lib/validations/preset'
 
 interface Props {
   config: PresetConfig
@@ -38,6 +39,7 @@ export function VisualizerCanvas({ config }: Props) {
     if (cfg.type === 'spectrum') return new SpectrumRenderer(canvas, cfg as SpectrumConfig)
     if (cfg.type === 'features') return new FeaturesRenderer(canvas, cfg as FeaturesConfig)
     if (cfg.type === 'chords') return new ChordsRenderer(canvas, cfg as ChordsConfig)
+    if (cfg.type === 'plasma') return new PlasmaRenderer(canvas, cfg as PlasmaConfig)
     return new WaveformRenderer(canvas, cfg)
   }, [])
 
@@ -62,7 +64,16 @@ export function VisualizerCanvas({ config }: Props) {
     if (!started || !canvasRef.current) return
     const canvas = canvasRef.current
     rendererRef.current?.destroy()
-    rendererRef.current = buildRenderer(canvas, config)
+    try {
+      rendererRef.current = buildRenderer(canvas, config)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setMicError(
+        msg.includes('WebGL2')
+          ? 'WebGL2 is not supported in this browser. Try Chrome or Firefox.'
+          : `Failed to build renderer: ${msg}`
+      )
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.type, config.colorScheme, barCount, mirrorBars, started, buildRenderer])
 
@@ -119,8 +130,13 @@ export function VisualizerCanvas({ config }: Props) {
       engineRef.current = engine
       rendererRef.current = buildRenderer(canvas, config)
       setStarted(true)
-    } catch {
-      setMicError('Microphone access denied. Please allow mic access and refresh.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setMicError(
+        msg.includes('WebGL2')
+          ? 'WebGL2 is not supported in this browser. Try Chrome or Firefox.'
+          : 'Microphone access denied. Please allow mic access and refresh.'
+      )
     }
   }
 
