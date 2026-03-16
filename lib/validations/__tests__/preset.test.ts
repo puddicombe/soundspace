@@ -2,6 +2,7 @@ import {
   presetConfigSchema,
   createPresetSchema,
   updatePresetSchema,
+  trenchRunConfigSchema,
 } from '../preset'
 
 describe('presetConfigSchema', () => {
@@ -73,8 +74,36 @@ describe('presetConfigSchema', () => {
       colorScheme: 'neon-dark',
       sensitivity: 1.0,
       fftSize: 2048,
+      brightness: 1.0,
+      dynamicRange: 2.0,
     })
     expect(result.success).toBe(true)
+  })
+
+  it('accepts plasma config without brightness/dynamicRange (defaults applied)', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'plasma',
+      colorScheme: 'neon-dark',
+      sensitivity: 1.0,
+      fftSize: 2048,
+    })
+    expect(result.success).toBe(true)
+    if (result.success && result.data.type === 'plasma') {
+      expect(result.data.brightness).toBe(1.0)
+      expect(result.data.dynamicRange).toBe(2.0)
+    }
+  })
+
+  it('rejects plasma config with brightness out of range', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'plasma',
+      colorScheme: 'neon-dark',
+      sensitivity: 1.0,
+      fftSize: 2048,
+      brightness: 10.0,
+      dynamicRange: 2.0,
+    })
+    expect(result.success).toBe(false)
   })
 
   it('rejects plasma config with invalid colorScheme', () => {
@@ -97,6 +126,36 @@ describe('presetConfigSchema', () => {
       mirrorBars: false,
     })
     expect(result.success).toBe(false)
+  })
+})
+
+describe('trenchRunConfigSchema', () => {
+  const base = {
+    type: 'trenchRun' as const,
+    colorScheme: 'neon-dark' as const,
+    sensitivity: 1.0,
+    fftSize: 2048 as const,
+    scrollSpeed: 1.0,
+    bankIntensity: 0.6,
+    warpIntensity: 0.5,
+    gridDensity: 16,
+    hudOpacity: 0.9,
+  }
+
+  it('accepts valid trenchRun config', () => {
+    expect(() => trenchRunConfigSchema.parse(base)).not.toThrow()
+  })
+
+  it('rejects scrollSpeed below 0.5', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, scrollSpeed: 0.1 })).toThrow()
+  })
+
+  it('rejects gridDensity above 32', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, gridDensity: 64 })).toThrow()
+  })
+
+  it('rejects non-integer gridDensity', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, gridDensity: 16.5 })).toThrow()
   })
 })
 

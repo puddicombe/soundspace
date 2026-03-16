@@ -38,6 +38,17 @@ export const chordsConfigSchema = baseConfigSchema.extend({
 
 export const plasmaConfigSchema = baseConfigSchema.extend({
   type: z.literal('plasma'),
+  brightness: z.number().min(0.2).max(3.0).default(1.0),
+  dynamicRange: z.number().min(0.1).max(3.0).default(2.0),
+})
+
+export const trenchRunConfigSchema = baseConfigSchema.extend({
+  type: z.literal('trenchRun'),
+  scrollSpeed:   z.number().min(0.5).max(2.0).default(1.0),
+  bankIntensity: z.number().min(0.0).max(1.0).default(0.6),
+  warpIntensity: z.number().min(0.0).max(1.0).default(0.5),
+  gridDensity:   z.number().int().min(8).max(32).default(16),
+  hudOpacity:    z.number().min(0.0).max(1.0).default(0.9),
 })
 
 export const presetConfigSchema = z.discriminatedUnion('type', [
@@ -47,6 +58,7 @@ export const presetConfigSchema = z.discriminatedUnion('type', [
   featuresConfigSchema,
   chordsConfigSchema,
   plasmaConfigSchema,
+  trenchRunConfigSchema,
 ])
 
 export const createPresetSchema = z.object({
@@ -67,4 +79,5 @@ export type SpectrumConfig = z.infer<typeof spectrumConfigSchema>
 export type FeaturesConfig = z.infer<typeof featuresConfigSchema>
 export type ChordsConfig = z.infer<typeof chordsConfigSchema>
 export type PlasmaConfig = z.infer<typeof plasmaConfigSchema>
+export type TrenchRunConfig = z.infer<typeof trenchRunConfigSchema>
 export type PresetConfig = z.infer<typeof presetConfigSchema>
