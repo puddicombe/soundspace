@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig } from '@/lib/validations/preset'
+import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig, PlasmaConfig, TrenchRunConfig } from '@/lib/validations/preset'
 import { COLOR_SCHEMES, FFT_SIZES } from '@/lib/validations/preset'
+import { buildConfigForType, type VisualizerType } from './TypeBar'
 
 interface Props {
   config: PresetConfig
@@ -11,12 +12,18 @@ interface Props {
   onOpenPresets: () => void
 }
 
+const ALL_TYPES: VisualizerType[] = ['bars', 'waveform', 'spectrum', 'features', 'chords', 'plasma', 'trenchRun']
+
 export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPresets }: Props) {
   const { data: session } = useSession()
   const [visible, setVisible] = useState(false)
 
-  const isBars = config.type === 'bars'
-  const barsConfig = config as BarsConfig
+  const isBars      = config.type === 'bars'
+  const isPlasma    = config.type === 'plasma'
+  const isTrenchRun = config.type === 'trenchRun'
+  const barsConfig    = config as BarsConfig
+  const plasmaConfig  = config as PlasmaConfig
+  const trenchConfig  = config as TrenchRunConfig
 
   return (
     <>
@@ -44,31 +51,12 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
           {/* Visualiser type */}
           <div className="flex flex-col gap-2">
             <label className="text-gray-400 text-xs uppercase tracking-wider">Type</label>
-            <div className="flex gap-2">
-              {(['bars', 'waveform', 'spectrum', 'features', 'chords'] as const).map((t) => (
+            <div className="grid grid-cols-3 gap-2">
+              {ALL_TYPES.map((t) => (
                 <button
                   key={t}
-                  onClick={() => {
-                    if (t === 'waveform') {
-                      onConfigChange({ type: 'waveform', colorScheme: config.colorScheme, fftSize: config.fftSize, sensitivity: config.sensitivity })
-                    } else if (t === 'spectrum') {
-                      // Spectrum needs high FFT resolution for smooth log-scale display; use at least 4096
-                      const fftSize = config.fftSize < 4096 ? 4096 : config.fftSize
-                      onConfigChange({ type: 'spectrum', colorScheme: config.colorScheme, fftSize, sensitivity: config.sensitivity } as SpectrumConfig)
-                    } else if (t === 'features') {
-                      const fftSize = config.fftSize < 2048 ? 2048 : config.fftSize
-                      onConfigChange({ type: 'features', colorScheme: config.colorScheme, fftSize, sensitivity: config.sensitivity } as FeaturesConfig)
-                    } else if (t === 'chords') {
-                      const fftSize = config.fftSize < 2048 ? 2048 : config.fftSize
-                      onConfigChange({ type: 'chords', colorScheme: config.colorScheme, fftSize, sensitivity: config.sensitivity } as ChordsConfig)
-                    } else {
-                      onConfigChange({
-                        type: 'bars', colorScheme: config.colorScheme, fftSize: config.fftSize,
-                        barCount: 64, mirrorBars: true, sensitivity: config.sensitivity,
-                      })
-                    }
-                  }}
-                  className={`flex-1 py-1 rounded text-sm transition-colors ${
+                  onClick={() => onConfigChange(buildConfigForType(t, config))}
+                  className={`py-1 rounded text-sm transition-colors ${
                     config.type === t ? 'bg-cyan-500 text-black' : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
@@ -80,7 +68,9 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
 
           {/* Color scheme */}
           <div className="flex flex-col gap-2">
-            <label className="text-gray-400 text-xs uppercase tracking-wider">Colour</label>
+            <label className="text-gray-400 text-xs uppercase tracking-wider">
+              Colour{isPlasma ? ' palette' : ''}
+            </label>
             <div className="grid grid-cols-2 gap-2">
               {COLOR_SCHEMES.map((cs) => (
                 <button
@@ -137,6 +127,112 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
                 }`}
               />
             </div>
+          )}
+
+          {/* Plasma controls */}
+          {isPlasma && (
+            <>
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Sensitivity: {plasmaConfig.sensitivity.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.5} max={3.0} step={0.1}
+                  value={plasmaConfig.sensitivity}
+                  onChange={(e) => onConfigChange({ ...plasmaConfig, sensitivity: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Brightness: {plasmaConfig.brightness.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.2} max={3.0} step={0.1}
+                  value={plasmaConfig.brightness}
+                  onChange={(e) => onConfigChange({ ...plasmaConfig, brightness: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Dynamic range: {plasmaConfig.dynamicRange.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.1} max={3.0} step={0.1}
+                  value={plasmaConfig.dynamicRange}
+                  onChange={(e) => onConfigChange({ ...plasmaConfig, dynamicRange: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+            </>
+          )}
+
+          {/* TrenchRun controls */}
+          {isTrenchRun && (
+            <>
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Scroll speed: {trenchConfig.scrollSpeed.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.5} max={2.0} step={0.1}
+                  value={trenchConfig.scrollSpeed}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, scrollSpeed: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Bank intensity: {trenchConfig.bankIntensity.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.0} max={1.0} step={0.05}
+                  value={trenchConfig.bankIntensity}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, bankIntensity: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Warp intensity: {trenchConfig.warpIntensity.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.0} max={1.0} step={0.05}
+                  value={trenchConfig.warpIntensity}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, warpIntensity: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Grid density: {trenchConfig.gridDensity}
+                </label>
+                <input
+                  type="range" min={8} max={32} step={4}
+                  value={trenchConfig.gridDensity}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, gridDensity: parseInt(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  HUD opacity: {trenchConfig.hudOpacity.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.0} max={1.0} step={0.05}
+                  value={trenchConfig.hudOpacity}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, hudOpacity: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+            </>
           )}
 
           {/* FFT size */}
