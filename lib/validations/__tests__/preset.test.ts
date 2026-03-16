@@ -118,6 +118,59 @@ describe('presetConfigSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('accepts valid trenchRun config', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'trenchRun',
+      colorScheme: 'neon-dark',
+      sensitivity: 1.0,
+      fftSize: 2048,
+      scrollSpeed: 1.0,
+      bankIntensity: 0.6,
+      warpIntensity: 0.5,
+      gridDensity: 16,
+      hudOpacity: 0.9,
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts trenchRun config without optional fields (defaults applied)', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'trenchRun',
+      colorScheme: 'neon-dark',
+      sensitivity: 1.0,
+      fftSize: 2048,
+    })
+    expect(result.success).toBe(true)
+    if (result.success && result.data.type === 'trenchRun') {
+      expect(result.data.scrollSpeed).toBe(1.0)
+      expect(result.data.bankIntensity).toBe(0.6)
+      expect(result.data.warpIntensity).toBe(0.5)
+      expect(result.data.gridDensity).toBe(16)
+      expect(result.data.hudOpacity).toBe(0.9)
+    }
+  })
+
+  it('rejects trenchRun config with scrollSpeed out of range', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'trenchRun',
+      colorScheme: 'neon-dark',
+      sensitivity: 1.0,
+      fftSize: 2048,
+      scrollSpeed: 5.0,
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects trenchRun config with invalid colorScheme', () => {
+    const result = presetConfigSchema.safeParse({
+      type: 'trenchRun',
+      colorScheme: 'rainbow',
+      sensitivity: 1.0,
+      fftSize: 2048,
+    })
+    expect(result.success).toBe(false)
+  })
+
   it('rejects sensitivity out of range', () => {
     const result = presetConfigSchema.safeParse({
       type: 'bars',
