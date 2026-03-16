@@ -1,7 +1,7 @@
 'use client'
-import type { PresetConfig } from '@/lib/validations/preset'
+import type { PresetConfig, TrenchRunConfig } from '@/lib/validations/preset'
 
-const TYPES = ['bars', 'waveform', 'spectrum', 'features', 'chords', 'plasma'] as const
+const TYPES = ['bars', 'waveform', 'spectrum', 'features', 'chords', 'plasma', 'trenchRun'] as const
 export type VisualizerType = typeof TYPES[number]
 
 interface Props {
@@ -46,8 +46,18 @@ export function buildConfigForType(type: VisualizerType, current: PresetConfig):
     return { ...base, type, fftSize } as PresetConfig
   }
   if (type === 'plasma') {
-    // plasma has no fftSize minimum — pass through unchanged
-    return { ...base, type: 'plasma', fftSize: current.fftSize } as PresetConfig
+    const brightness   = current.type === 'plasma' ? current.brightness   : 1.0
+    const dynamicRange = current.type === 'plasma' ? current.dynamicRange : 2.0
+    return { ...base, type: 'plasma', fftSize: current.fftSize, brightness, dynamicRange } as PresetConfig
+  }
+  if (type === 'trenchRun') {
+    const scrollSpeed   = current.type === 'trenchRun' ? (current as TrenchRunConfig).scrollSpeed   : 1.0
+    const bankIntensity = current.type === 'trenchRun' ? (current as TrenchRunConfig).bankIntensity : 0.6
+    const warpIntensity = current.type === 'trenchRun' ? (current as TrenchRunConfig).warpIntensity : 0.5
+    const gridDensity   = current.type === 'trenchRun' ? (current as TrenchRunConfig).gridDensity   : 16
+    const hudOpacity    = current.type === 'trenchRun' ? (current as TrenchRunConfig).hudOpacity    : 0.9
+    return { ...base, type: 'trenchRun', fftSize: current.fftSize,
+             scrollSpeed, bankIntensity, warpIntensity, gridDensity, hudOpacity } as PresetConfig
   }
   // bars
   return { ...base, type: 'bars', fftSize: current.fftSize, barCount: 64, mirrorBars: true }

@@ -3,7 +3,9 @@ import {
   createPresetSchema,
   updatePresetSchema,
   trenchRunConfigSchema,
+  type TrenchRunConfig,
 } from '../preset'
+import { buildConfigForType } from '@/components/controls/TypeBar'
 
 describe('presetConfigSchema', () => {
   it('accepts valid bars config', () => {
@@ -207,5 +209,55 @@ describe('updatePresetSchema', () => {
   it('rejects invalid config in update', () => {
     const result = updatePresetSchema.safeParse({ config: { type: 'bad' } })
     expect(result.success).toBe(false)
+  })
+})
+
+describe('buildConfigForType — trenchRun branch', () => {
+  const barsConfig = {
+    type: 'bars' as const,
+    colorScheme: 'neon-dark' as const,
+    sensitivity: 1.2,
+    fftSize: 2048 as const,
+    barCount: 64,
+    mirrorBars: true,
+  }
+
+  const trenchRunConfig: TrenchRunConfig = {
+    type: 'trenchRun',
+    colorScheme: 'neon-dark',
+    sensitivity: 1.2,
+    fftSize: 2048,
+    scrollSpeed: 1.5,
+    bankIntensity: 0.3,
+    warpIntensity: 0.8,
+    gridDensity: 24,
+    hudOpacity: 0.5,
+  }
+
+  it('returns default trenchRun values when switching from a non-trenchRun type', () => {
+    const result = buildConfigForType('trenchRun', barsConfig)
+    expect(result.type).toBe('trenchRun')
+    expect(result.colorScheme).toBe('neon-dark')
+    expect(result.sensitivity).toBe(1.2)
+    expect(result.fftSize).toBe(2048)
+    if (result.type === 'trenchRun') {
+      expect(result.scrollSpeed).toBe(1.0)
+      expect(result.bankIntensity).toBe(0.6)
+      expect(result.warpIntensity).toBe(0.5)
+      expect(result.gridDensity).toBe(16)
+      expect(result.hudOpacity).toBe(0.9)
+    }
+  })
+
+  it('preserves existing trenchRun values when switching back to trenchRun', () => {
+    const result = buildConfigForType('trenchRun', trenchRunConfig)
+    expect(result.type).toBe('trenchRun')
+    if (result.type === 'trenchRun') {
+      expect(result.scrollSpeed).toBe(1.5)
+      expect(result.bankIntensity).toBe(0.3)
+      expect(result.warpIntensity).toBe(0.8)
+      expect(result.gridDensity).toBe(24)
+      expect(result.hudOpacity).toBe(0.5)
+    }
   })
 })
