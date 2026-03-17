@@ -16,7 +16,7 @@ const DEFAULT_CONFIG: PresetConfig = {
   mirrorBars: true,
 }
 
-const VISUALIZER_TYPES: VisualizerType[] = ['bars', 'waveform', 'spectrum', 'features', 'chords']
+const VISUALIZER_TYPES: VisualizerType[] = ['bars', 'waveform', 'spectrum', 'features', 'chords', 'plasma', 'trenchRun']
 const HOTKEY_STORAGE_KEY = 'soundspace-preset-hotkeys'
 
 type ModalMode = null | 'list' | 'save'
@@ -65,7 +65,7 @@ export default function VisualizerPage() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const idx = parseInt(e.key) - 1
-      if (idx >= 0 && idx < 5) {
+      if (idx >= 0 && idx < VISUALIZER_TYPES.length) {
         e.preventDefault()
         handleTypeChange(VISUALIZER_TYPES[idx])
       } else if (e.key >= '6' && e.key <= '9') {

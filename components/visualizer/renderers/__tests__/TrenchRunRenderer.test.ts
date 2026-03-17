@@ -52,6 +52,8 @@ function makeGlStub() {
     getExtension: jest.fn().mockReturnValue(null),
     enable: jest.fn(),
     blendFunc: jest.fn(),
+    drawingBufferWidth: 800,
+    drawingBufferHeight: 600,
   }
 }
 
