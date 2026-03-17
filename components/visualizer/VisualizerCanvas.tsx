@@ -7,11 +7,12 @@ import { SpectrumRenderer } from './renderers/SpectrumRenderer'
 import { FeaturesRenderer } from './renderers/FeaturesRenderer'
 import { ChordsRenderer } from './renderers/ChordsRenderer'
 import { PlasmaRenderer } from './renderers/PlasmaRenderer'
+import { TrenchRunRenderer } from './renderers/TrenchRunRenderer'
 import { ChordTestOverlay } from './ChordTestOverlay'
 import type { BaseRenderer } from './renderers/BaseRenderer'
 import type { AudioFeatures } from './AudioFeatures'
 import { NULL_FEATURES } from './AudioFeatures'
-import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig, PlasmaConfig } from '@/lib/validations/preset'
+import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig, PlasmaConfig, TrenchRunConfig } from '@/lib/validations/preset'
 
 interface Props {
   config: PresetConfig
@@ -19,6 +20,7 @@ interface Props {
 
 export function VisualizerCanvas({ config }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const glCanvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<AudioEngine | null>(null)
   const rendererRef = useRef<BaseRenderer | null>(null)
   const rafRef = useRef<number>(0)
@@ -33,23 +35,30 @@ export function VisualizerCanvas({ config }: Props) {
   }>({ chord: null, candidates: [] })
   const prevChordRef = useRef<string | null | undefined>(undefined)
 
-  // Build renderer from config
-  const buildRenderer = useCallback((canvas: HTMLCanvasElement, cfg: PresetConfig): BaseRenderer => {
+  // Build renderer from config — WebGL renderers use a dedicated canvas to avoid
+  // context-type conflicts (a canvas locked to '2d' cannot later serve 'webgl2')
+  const buildRenderer = useCallback((cfg: PresetConfig): BaseRenderer => {
+    const canvas = canvasRef.current!
+    const glCanvas = glCanvasRef.current!
     if (cfg.type === 'bars') return new BarsRenderer(canvas, cfg)
     if (cfg.type === 'spectrum') return new SpectrumRenderer(canvas, cfg as SpectrumConfig)
     if (cfg.type === 'features') return new FeaturesRenderer(canvas, cfg as FeaturesConfig)
     if (cfg.type === 'chords') return new ChordsRenderer(canvas, cfg as ChordsConfig)
-    if (cfg.type === 'plasma') return new PlasmaRenderer(canvas, cfg as PlasmaConfig)
+    if (cfg.type === 'plasma') return new PlasmaRenderer(glCanvas, cfg as PlasmaConfig)
+    if (cfg.type === 'trenchRun') return new TrenchRunRenderer(glCanvas, cfg as TrenchRunConfig)
     return new WaveformRenderer(canvas, cfg)
   }, [])
 
-  // Resize canvas to fill window
+  // Resize both canvases to fill window
   useEffect(() => {
     function handleResize() {
       const canvas = canvasRef.current
-      if (!canvas) return
+      const glCanvas = glCanvasRef.current
+      if (!canvas || !glCanvas) return
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      glCanvas.width = window.innerWidth
+      glCanvas.height = window.innerHeight
       rendererRef.current?.resize(canvas.width, canvas.height)
     }
     handleResize()
@@ -57,15 +66,15 @@ export function VisualizerCanvas({ config }: Props) {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Re-build renderer when config type, colorScheme, barCount, or mirrorBars changes
+  // Re-build renderer when config type, colorScheme, or bars-specific params change
   const barCount = config.type === 'bars' ? (config as BarsConfig).barCount : 0
   const mirrorBars = config.type === 'bars' ? (config as BarsConfig).mirrorBars : false
+  const trenchGridDensity = config.type === 'trenchRun' ? (config as TrenchRunConfig).gridDensity : 0
   useEffect(() => {
-    if (!started || !canvasRef.current) return
-    const canvas = canvasRef.current
+    if (!started || !canvasRef.current || !glCanvasRef.current) return
     rendererRef.current?.destroy()
     try {
-      rendererRef.current = buildRenderer(canvas, config)
+      rendererRef.current = buildRenderer(config)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setMicError(
@@ -75,7 +84,27 @@ export function VisualizerCanvas({ config }: Props) {
       )
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.type, config.colorScheme, barCount, mirrorBars, started, buildRenderer])
+  }, [config.type, config.colorScheme, barCount, mirrorBars, trenchGridDensity, started, buildRenderer])
+
+  // Update trenchRun slider values in-place — no rebuild needed
+  useEffect(() => {
+    if (config.type !== 'trenchRun') return
+    const r = rendererRef.current as TrenchRunRenderer | null
+    if (!r) return
+    r.scrollSpeed   = (config as TrenchRunConfig).scrollSpeed
+    r.bankIntensity = (config as TrenchRunConfig).bankIntensity
+    r.warpIntensity = (config as TrenchRunConfig).warpIntensity
+    r.hudOpacity    = (config as TrenchRunConfig).hudOpacity
+  }, [config])
+
+  // Update plasma slider values in-place — no rebuild needed
+  useEffect(() => {
+    if (config.type !== 'plasma') return
+    const r = rendererRef.current as PlasmaRenderer | null
+    if (!r) return
+    r.brightness   = (config as PlasmaConfig).brightness
+    r.dynamicRange = (config as PlasmaConfig).dynamicRange
+  }, [config])
 
   // Render loop
   useEffect(() => {
@@ -122,13 +151,12 @@ export function VisualizerCanvas({ config }: Props) {
   }, [])
 
   async function handleStart() {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvasRef.current || !glCanvasRef.current) return
     try {
       const engine = new AudioEngine(config)
       await engine.start()
       engineRef.current = engine
-      rendererRef.current = buildRenderer(canvas, config)
+      rendererRef.current = buildRenderer(config)
       setStarted(true)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -140,9 +168,12 @@ export function VisualizerCanvas({ config }: Props) {
     }
   }
 
+  const usesGl = config.type === 'plasma' || config.type === 'trenchRun'
+
   return (
     <div className="relative w-screen h-screen bg-black overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef}   className="absolute inset-0" style={{ display: usesGl ? 'none' : 'block' }} />
+      <canvas ref={glCanvasRef} className="absolute inset-0" style={{ display: usesGl ? 'block' : 'none' }} />
 
       {!started && (
         <div
