@@ -66,19 +66,21 @@ void main() {
 `
 
 // ---------------------------------------------------------------------------
+// Module-level pre-allocated scratch buffers for mat4 operations
+// ---------------------------------------------------------------------------
+
+const _m4a = new Float32Array(16)
+const _m4b = new Float32Array(16)
+const _mvp = new Float32Array(16)
+const _colorBuf = new Float32Array(3)
+
+// ---------------------------------------------------------------------------
 // Inline mat4 utilities (column-major Float32Array[16])
 // ---------------------------------------------------------------------------
 
 type Mat4 = Float32Array
 
-function mat4Identity(): Mat4 {
-  const m = new Float32Array(16)
-  m[0] = 1; m[5] = 1; m[10] = 1; m[15] = 1
-  return m
-}
-
-function mat4Multiply(a: Mat4, b: Mat4): Mat4 {
-  const out = new Float32Array(16)
+function mat4Multiply(out: Mat4, a: Mat4, b: Mat4): Mat4 {
   for (let col = 0; col < 4; col++) {
     for (let row = 0; row < 4; row++) {
       let sum = 0
@@ -91,19 +93,20 @@ function mat4Multiply(a: Mat4, b: Mat4): Mat4 {
   return out
 }
 
-function mat4Perspective(fovY: number, aspect: number, near: number, far: number): Mat4 {
-  const m = new Float32Array(16)
+function mat4Perspective(out: Mat4, fovY: number, aspect: number, near: number, far: number): Mat4 {
+  out.fill(0)
   const f = 1.0 / Math.tan(fovY / 2)
   const nf = 1 / (near - far)
-  m[0] = f / aspect
-  m[5] = f
-  m[10] = (far + near) * nf
-  m[11] = -1
-  m[14] = 2 * far * near * nf
-  return m
+  out[0] = f / aspect
+  out[5] = f
+  out[10] = (far + near) * nf
+  out[11] = -1
+  out[14] = 2 * far * near * nf
+  return out
 }
 
 function mat4LookAt(
+  out: Mat4,
   eyeX: number, eyeY: number, eyeZ: number,
   centerX: number, centerY: number, centerZ: number,
   upX: number, upY: number, upZ: number,
@@ -125,15 +128,14 @@ function mat4LookAt(
   const uy = sz * fx - sx * fz
   const uz = sx * fy - sy * fx
 
-  const m = new Float32Array(16)
-  m[0] = sx;  m[1] = ux;  m[2]  = -fx; m[3]  = 0
-  m[4] = sy;  m[5] = uy;  m[6]  = -fy; m[7]  = 0
-  m[8] = sz;  m[9] = uz;  m[10] = -fz; m[11] = 0
-  m[12] = -(sx * eyeX + sy * eyeY + sz * eyeZ)
-  m[13] = -(ux * eyeX + uy * eyeY + uz * eyeZ)
-  m[14] = -(-fx * eyeX + -fy * eyeY + -fz * eyeZ)
-  m[15] = 1
-  return m
+  out[0] = sx;  out[1] = ux;  out[2]  = -fx; out[3]  = 0
+  out[4] = sy;  out[5] = uy;  out[6]  = -fy; out[7]  = 0
+  out[8] = sz;  out[9] = uz;  out[10] = -fz; out[11] = 0
+  out[12] = -(sx * eyeX + sy * eyeY + sz * eyeZ)
+  out[13] = -(ux * eyeX + uy * eyeY + uz * eyeZ)
+  out[14] = fx * eyeX + fy * eyeY + fz * eyeZ
+  out[15] = 1
+  return out
 }
 
 // ---------------------------------------------------------------------------
@@ -397,11 +399,9 @@ export class TrenchRunRenderer implements BaseRenderer {
 
     // MVP matrix
     const aspect = gl.drawingBufferWidth / (gl.drawingBufferHeight || 1)
-    const perspective = mat4Perspective(60 * Math.PI / 180, aspect, 0.1, 200)
-    const upX = Math.sin(bankAngle)
-    const upY = Math.cos(bankAngle)
-    const view = mat4LookAt(0, 0, -10, 0, 0, 0, upX, upY, 0)
-    const mvp = mat4Multiply(perspective, mat4Multiply(view, mat4Identity()))
+    mat4Perspective(_m4a, Math.PI / 3, aspect, 0.1, 200)
+    mat4LookAt(_m4b, 0, 0, -10, 0, 0, 0, Math.sin(bankAngle), Math.cos(bankAngle), 0)
+    mat4Multiply(_mvp, _m4a, _m4b)
 
     // Palette + spectral shift
     const palette = PALETTES[this.colorScheme] ?? PALETTES['neon-dark']
@@ -412,12 +412,13 @@ export class TrenchRunRenderer implements BaseRenderer {
 
     // Upload uniforms
     gl.useProgram(this.program)
-    gl.uniformMatrix4fv(this.u_mvpLoc, false, mvp)
+    gl.uniformMatrix4fv(this.u_mvpLoc, false, _mvp)
     gl.uniform1f(this.u_zOffsetLoc, this.zOffset)
     gl.uniform1f(this.u_bassBreathLoc, this.smoothedBass)
     gl.uniform1f(this.u_beatFlashLoc, this.beatFlash)
     gl.uniform1f(this.u_warpAmountLoc, warpAmount)
-    gl.uniform3fv(this.u_colorLoc, [r, g, b])
+    _colorBuf[0] = r; _colorBuf[1] = g; _colorBuf[2] = b
+    gl.uniform3fv(this.u_colorLoc, _colorBuf)
 
     // Clear
     gl.clear(gl.COLOR_BUFFER_BIT)
