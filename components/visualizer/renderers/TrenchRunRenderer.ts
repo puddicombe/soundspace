@@ -370,7 +370,7 @@ export class TrenchRunRenderer implements BaseRenderer {
     // Smoothed values (EMA, tau=150ms)
     const alpha = dt > 0 ? 1 - Math.exp(-dt / 0.15) : 0
     this.smoothedRms += (features.rms - this.smoothedRms) * alpha
-    this.smoothedBass += (features.bandEnergy[0] - this.smoothedBass) * alpha
+    this.smoothedBass += (features.bandEnergy[1] - this.smoothedBass) * alpha
 
     const isOnset = features.isOnset
 
@@ -455,14 +455,14 @@ export class TrenchRunRenderer implements BaseRenderer {
     const w = this.overlay.width
     const h = this.overlay.height
 
+    ctx.globalAlpha = this.hudOpacity
+
     ctx.clearRect(0, 0, w, h)
 
     // Scanlines
     if (this.scanlineCanvas) {
       ctx.drawImage(this.scanlineCanvas, 0, 0)
     }
-
-    ctx.globalAlpha = this.hudOpacity
     const palette = PALETTES[this.colorScheme] ?? PALETTES['neon-dark']
     const [hr, hg, hb] = palette.hud
     const hudColor = `rgba(${Math.round(hr * 255)},${Math.round(hg * 255)},${Math.round(hb * 255)},1)`
@@ -520,7 +520,7 @@ export class TrenchRunRenderer implements BaseRenderer {
     // Bottom-left
     ctx.textAlign = 'left'
     ctx.textBaseline = 'bottom'
-    ctx.fillText(`VEL: ${(1.0 + this.smoothedRms).toFixed(1)}x`, margin + 5, h - margin - 5)
+    ctx.fillText(`VEL: ${(this.scrollSpeed * (1 + this.smoothedRms * 0.5)).toFixed(1)}x`, margin + 5, h - margin - 5)
 
     // Bottom-right
     ctx.textAlign = 'right'
