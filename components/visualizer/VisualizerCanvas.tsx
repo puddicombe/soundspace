@@ -70,6 +70,29 @@ export function VisualizerCanvas({ config }: Props) {
   const barCount = config.type === 'bars' ? (config as BarsConfig).barCount : 0
   const mirrorBars = config.type === 'bars' ? (config as BarsConfig).mirrorBars : false
   const trenchGridDensity = config.type === 'trenchRun' ? (config as TrenchRunConfig).gridDensity : 0
+
+  // Update trenchRun slider values in-place — no rebuild needed
+  // MUST be declared before the rebuild effect (React runs effects in declaration order)
+  useEffect(() => {
+    if (config.type !== 'trenchRun') return
+    const r = rendererRef.current as TrenchRunRenderer | null
+    if (!r) return
+    r.scrollSpeed   = (config as TrenchRunConfig).scrollSpeed
+    r.bankIntensity = (config as TrenchRunConfig).bankIntensity
+    r.warpIntensity = (config as TrenchRunConfig).warpIntensity
+    r.hudOpacity    = (config as TrenchRunConfig).hudOpacity
+  }, [config])
+
+  // Update plasma slider values in-place — no rebuild needed
+  // MUST be declared before the rebuild effect (React runs effects in declaration order)
+  useEffect(() => {
+    if (config.type !== 'plasma') return
+    const r = rendererRef.current as PlasmaRenderer | null
+    if (!r) return
+    r.brightness   = (config as PlasmaConfig).brightness
+    r.dynamicRange = (config as PlasmaConfig).dynamicRange
+  }, [config])
+
   useEffect(() => {
     if (!started || !canvasRef.current || !glCanvasRef.current) return
     rendererRef.current?.destroy()
@@ -85,26 +108,6 @@ export function VisualizerCanvas({ config }: Props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.type, config.colorScheme, barCount, mirrorBars, trenchGridDensity, started, buildRenderer])
-
-  // Update trenchRun slider values in-place — no rebuild needed
-  useEffect(() => {
-    if (config.type !== 'trenchRun') return
-    const r = rendererRef.current as TrenchRunRenderer | null
-    if (!r) return
-    r.scrollSpeed   = (config as TrenchRunConfig).scrollSpeed
-    r.bankIntensity = (config as TrenchRunConfig).bankIntensity
-    r.warpIntensity = (config as TrenchRunConfig).warpIntensity
-    r.hudOpacity    = (config as TrenchRunConfig).hudOpacity
-  }, [config])
-
-  // Update plasma slider values in-place — no rebuild needed
-  useEffect(() => {
-    if (config.type !== 'plasma') return
-    const r = rendererRef.current as PlasmaRenderer | null
-    if (!r) return
-    r.brightness   = (config as PlasmaConfig).brightness
-    r.dynamicRange = (config as PlasmaConfig).dynamicRange
-  }, [config])
 
   // Render loop
   useEffect(() => {
