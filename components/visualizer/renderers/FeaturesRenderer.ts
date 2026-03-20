@@ -95,7 +95,7 @@ export class FeaturesRenderer implements BaseRenderer {
 
   private drawPanel(
     x: number, y: number, w: number, h: number,
-    title: typeof _SECTION_TITLES[number],
+    title: 'ENERGY' | 'BAND ENERGY' | 'TIMBRE' | 'CHROMA' | 'RHYTHM' | 'AFFECT',
     f: AudioFeatures,
     accent: { primary: string; dim: string; grid: string; bg: string }
   ) {
