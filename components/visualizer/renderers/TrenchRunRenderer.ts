@@ -575,9 +575,9 @@ export class TrenchRunRenderer implements BaseRenderer {
     // Smoothed values (EMA, tau=150ms)
     const alpha = dt > 0 ? 1 - Math.exp(-dt / 0.15) : 0
     this.smoothedRms  += (features.rms            - this.smoothedRms)  * alpha
-    this.smoothedBass += ((features.bandEnergy[1] ?? 0) - this.smoothedBass) * alpha
-    this.smoothedMid  += ((features.bandEnergy[3] ?? 0) - this.smoothedMid)  * alpha  // mids (~1-4kHz)
-    this.smoothedHigh += ((features.bandEnergy[5] ?? 0) - this.smoothedHigh) * alpha  // highs (~6kHz+)
+    this.smoothedBass += (features.bandEnergy[1] - this.smoothedBass) * alpha
+    this.smoothedMid  += (features.bandEnergy[2] - this.smoothedMid)  * alpha  // mids (250Hz–2kHz)
+    this.smoothedHigh += (features.bandEnergy[3] - this.smoothedHigh) * alpha  // highs (2kHz–20kHz)
 
     const isOnset = features.isOnset
 
