@@ -160,6 +160,33 @@ describe('TrenchRunRenderer', () => {
     expect(gl.drawArrays).toHaveBeenCalled()
   })
 
+  it('builds geometry for 3 rectangular faces (floor + 2 walls)', () => {
+    const gl = makeGlStub()
+    const canvas = makeCanvas(gl)
+    new TrenchRunRenderer(canvas, defaultConfig)
+    // gridDensity=16 → 12 * 16 = 192 vertices → 576 floats
+    const call = gl.bufferData.mock.calls[0]
+    expect(call[1]).toBeInstanceOf(Float32Array)
+    expect((call[1] as Float32Array).length).toBe(12 * defaultConfig.gridDensity * 3)
+  })
+
+  it('uploads u_scanRange uniform on each render call', () => {
+    const gl = makeGlStub()
+    const canvas = makeCanvas(gl)
+    const renderer = new TrenchRunRenderer(canvas, defaultConfig)
+    const fft = new Float32Array(2048)
+    const wave = new Float32Array(2048)
+    gl.uniform1f.mockClear()
+    renderer.render(fft, wave, { ...NULL_FEATURES })
+    // u_scanRange should be uploaded (uniform1f called at least once after render)
+    expect(gl.uniform1f).toHaveBeenCalled()
+    // Verify u_scanRange was queried during construction
+    const scanRangeQueried = gl.getUniformLocation.mock.calls.some(
+      (call: unknown[]) => call[1] === 'u_scanRange'
+    )
+    expect(scanRangeQueried).toBe(true)
+  })
+
   it('calls gl.viewport on resize', () => {
     const gl = makeGlStub()
     const canvas = makeCanvas(gl)
