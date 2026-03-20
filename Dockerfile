@@ -5,6 +5,7 @@ RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Dummy values so Prisma/NextAuth don't throw during `next build`.
@@ -16,6 +17,7 @@ RUN npx prisma generate && npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
+RUN apk add --no-cache openssl
 ENV NODE_ENV=production
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
