@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    image: ghcr.io/puddicombe/soundspace:latest
     ports:
       - "3390:3000"
     environment:
