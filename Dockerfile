@@ -7,6 +7,11 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Dummy values so Prisma/NextAuth don't throw during `next build`.
+# These are build-time only and are NOT present in the runner stage.
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
+ENV NEXTAUTH_SECRET=build-placeholder-not-used-at-runtime
+ENV NEXTAUTH_URL=http://localhost:3000
 RUN npx prisma generate && npm run build
 
 FROM node:20-alpine AS runner
