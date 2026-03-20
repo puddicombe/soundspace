@@ -7,6 +7,8 @@ const defaultConfig: PlasmaConfig = {
   colorScheme: 'neon-dark',
   sensitivity: 1.0,
   fftSize: 2048,
+  brightness: 1.0,
+  dynamicRange: 2.0,
 }
 
 /** Minimal WebGL2 context stub sufficient for PlasmaRenderer. */
@@ -114,6 +116,39 @@ describe('PlasmaRenderer', () => {
     const canvas = makeCanvas()
     const renderer = new PlasmaRenderer(canvas, defaultConfig)
     expect(() => renderer.destroy()).not.toThrow()
+  })
+
+  /**
+   * Regression: destroy() must NOT call WEBGL_lose_context.loseContext().
+   *
+   * Calling loseContext() permanently invalidates the canvas's WebGL context —
+   * subsequent getContext('webgl2') calls return null, making it impossible to
+   * rebuild a renderer on the same canvas element (e.g. when switching colour
+   * schemes or returning to the plasma tab).
+   *
+   * This test uses a stateful stub: loseContext() flips a flag that makes
+   * getContext return null, simulating the real browser behaviour. A static
+   * stub (getExtension → null) would silently pass even with the bug present.
+   */
+  it('can be rebuilt on the same canvas after destroy (regression: loseContext must not be called)', () => {
+    let contextLost = false
+    const gl = makeGlStub()
+    gl.getExtension.mockImplementation((name: string) => {
+      if (name === 'WEBGL_lose_context') return { loseContext: () => { contextLost = true } }
+      return null
+    })
+    const canvas = document.createElement('canvas')
+    canvas.width = 800
+    canvas.height = 600
+    jest.spyOn(canvas, 'getContext').mockImplementation((id: string) => {
+      if (id === 'webgl2') return contextLost ? null : gl as unknown as WebGL2RenderingContext
+      return null
+    })
+
+    const r1 = new PlasmaRenderer(canvas, defaultConfig)
+    r1.destroy()
+    // If destroy() had called loseContext(), this would throw 'WebGL2 not supported'
+    expect(() => new PlasmaRenderer(canvas, defaultConfig)).not.toThrow()
   })
 
   it('spawns a shockwave on isOnset and uploads to shader', () => {

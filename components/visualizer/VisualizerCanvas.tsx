@@ -77,10 +77,15 @@ export function VisualizerCanvas({ config }: Props) {
     if (config.type !== 'trenchRun') return
     const r = rendererRef.current as TrenchRunRenderer | null
     if (!r) return
-    r.scrollSpeed   = (config as TrenchRunConfig).scrollSpeed
-    r.bankIntensity = (config as TrenchRunConfig).bankIntensity
-    r.warpIntensity = (config as TrenchRunConfig).warpIntensity
-    r.hudOpacity    = (config as TrenchRunConfig).hudOpacity
+    r.scrollSpeed     = (config as TrenchRunConfig).scrollSpeed
+    r.bankIntensity   = (config as TrenchRunConfig).bankIntensity
+    r.warpIntensity   = (config as TrenchRunConfig).warpIntensity
+    r.hudOpacity      = (config as TrenchRunConfig).hudOpacity
+    r.scanRange       = (config as TrenchRunConfig).scanRange ?? 50
+    r.bankLateral     = (config as TrenchRunConfig).bankLateral ?? 0.7
+    r.missileRate     = (config as TrenchRunConfig).missileRate ?? 1.0
+    r.skyIntensity    = (config as TrenchRunConfig).skyIntensity ?? 1.0
+    r.battleIntensity = (config as TrenchRunConfig).battleIntensity ?? 1.0
   }, [config])
 
   // Update plasma slider values in-place — no rebuild needed

@@ -33,6 +33,9 @@ const FRAGMENT_SHADER_SRC = `
   uniform vec3 u_paletteC;
   uniform vec3 u_paletteD;
 
+  uniform float u_brightness;
+  uniform float u_dynamicRange;
+
   uniform int u_swCount;
   uniform vec2 u_swOrigin[8];
   uniform float u_swAge[8];
@@ -76,13 +79,13 @@ const FRAGMENT_SHADER_SRC = `
     }
 
     // Step 6: brightness and beat pulse
-    float beatPulse = pow(1.0 - u_beatPhase, 2.0) * u_rms * 0.3;
-    float brightness = 0.2 + u_rms * 0.8 + beatPulse;
-    colour *= brightness * u_signalPresence;
+    float beatPulse = pow(1.0 - u_beatPhase, 2.0) * u_rms * 0.8;
+    float brightness = u_brightness + u_rms * u_dynamicRange + beatPulse;
+    colour *= brightness * max(u_signalPresence, 0.15);
 
     // Step 7: high-frequency shimmer
     float sparkle = fract(sin(dot(v_uv * 200.0, vec2(12.9898, 78.233))) * 43758.5453);
-    colour += vec3(sparkle) * u_highBand * 0.15;
+    colour += vec3(sparkle) * u_highBand * 0.35;
 
     // Step 8: chord change flash (desaturate toward luminance)
     float lum = dot(colour, vec3(0.299, 0.587, 0.114));
@@ -93,23 +96,31 @@ const FRAGMENT_SHADER_SRC = `
 `
 
 // ---------------------------------------------------------------------------
-// Palette constants (warm = high valence, cool = low valence)
+// Palette pairs per colour scheme (cool = low valence, warm = high valence)
 // ---------------------------------------------------------------------------
 
 type Vec3 = [number, number, number]
 
-const WARM_PALETTE = {
-  a: [0.5, 0.4, 0.3] as Vec3,
-  b: [0.5, 0.4, 0.3] as Vec3,
-  c: [1.0, 1.0, 1.0] as Vec3,
-  d: [0.0, 0.1, 0.2] as Vec3,
-}
+interface Palette { a: Vec3; b: Vec3; c: Vec3; d: Vec3 }
+interface PalettePair { cool: Palette; warm: Palette }
 
-const COOL_PALETTE = {
-  a: [0.3, 0.3, 0.5] as Vec3,
-  b: [0.3, 0.3, 0.4] as Vec3,
-  c: [1.0, 1.0, 1.0] as Vec3,
-  d: [0.5, 0.6, 0.7] as Vec3,
+const PALETTES: Record<string, PalettePair> = {
+  'neon-dark': {
+    cool: { a: [0.2, 0.3, 0.6], b: [0.4, 0.4, 0.7], c: [1, 1, 1], d: [0.5, 0.6, 0.7] },
+    warm: { a: [0.6, 0.5, 0.3], b: [0.7, 0.6, 0.4], c: [1, 1, 1], d: [0.0, 0.1, 0.2] },
+  },
+  'sunset': {
+    cool: { a: [0.4, 0.1, 0.3], b: [0.5, 0.2, 0.4], c: [1, 1, 1], d: [0.6, 0.7, 0.8] },
+    warm: { a: [0.7, 0.3, 0.1], b: [0.6, 0.5, 0.2], c: [1, 1, 1], d: [0.0, 0.1, 0.3] },
+  },
+  'ocean': {
+    cool: { a: [0.1, 0.2, 0.5], b: [0.2, 0.3, 0.6], c: [1, 1, 1], d: [0.5, 0.6, 0.7] },
+    warm: { a: [0.1, 0.5, 0.5], b: [0.2, 0.5, 0.4], c: [1, 1, 1], d: [0.5, 0.3, 0.5] },
+  },
+  'mono': {
+    cool: { a: [0.15, 0.15, 0.2], b: [0.25, 0.25, 0.3], c: [1, 1, 1], d: [0.0, 0.1, 0.2] },
+    warm: { a: [0.5, 0.5, 0.5],  b: [0.5, 0.5, 0.5],  c: [1, 1, 1], d: [0.0, 0.0, 0.0] },
+  },
 }
 
 function lerp3(a: Vec3, b: Vec3, t: number): Vec3 {
@@ -164,6 +175,8 @@ export class PlasmaRenderer implements BaseRenderer {
   private uPaletteB: WebGLUniformLocation
   private uPaletteC: WebGLUniformLocation
   private uPaletteD: WebGLUniformLocation
+  private uBrightness: WebGLUniformLocation
+  private uDynamicRange: WebGLUniformLocation
   private uSwCount: WebGLUniformLocation
   private uSwOrigin: WebGLUniformLocation
   private uSwAge: WebGLUniformLocation
@@ -174,7 +187,12 @@ export class PlasmaRenderer implements BaseRenderer {
   private swAges      = new Float32Array(8)
   private swStrengths = new Float32Array(8)
 
-  constructor(canvas: HTMLCanvasElement, _config: PlasmaConfig) {
+  // Config-derived values — public so VisualizerCanvas can update sliders without a full rebuild
+  brightness: number
+  dynamicRange: number
+  private palettePair: PalettePair
+
+  constructor(canvas: HTMLCanvasElement, config: PlasmaConfig) {
     const gl = canvas.getContext('webgl2')
     if (!gl) throw new Error('WebGL2 not supported in this browser.')
     this.gl = gl
@@ -225,10 +243,16 @@ export class PlasmaRenderer implements BaseRenderer {
     this.uPaletteB         = ul('u_paletteB')
     this.uPaletteC         = ul('u_paletteC')
     this.uPaletteD         = ul('u_paletteD')
+    this.uBrightness       = ul('u_brightness')
+    this.uDynamicRange     = ul('u_dynamicRange')
     this.uSwCount          = ul('u_swCount')
     this.uSwOrigin         = ul('u_swOrigin[0]')
     this.uSwAge            = ul('u_swAge[0]')
     this.uSwStrength       = ul('u_swStrength[0]')
+
+    this.brightness    = config.brightness
+    this.dynamicRange  = config.dynamicRange
+    this.palettePair   = PALETTES[config.colorScheme] ?? PALETTES['neon-dark']
 
     gl.clearColor(0, 0, 0, 1)
     gl.enable(gl.BLEND)
@@ -255,12 +279,13 @@ export class PlasmaRenderer implements BaseRenderer {
       if (this.shockwaves.length > 8) this.shockwaves.shift()
     }
 
-    // Interpolate palette from cool (valence=0) to warm (valence=1)
+    // Interpolate palette from cool (valence=0) to warm (valence=1) using active palette pair
+    const { cool, warm } = this.palettePair
     const v = features.valence
-    const pa = lerp3(COOL_PALETTE.a, WARM_PALETTE.a, v)
-    const pb = lerp3(COOL_PALETTE.b, WARM_PALETTE.b, v)
-    const pc = lerp3(COOL_PALETTE.c, WARM_PALETTE.c, v)
-    const pd = lerp3(COOL_PALETTE.d, WARM_PALETTE.d, v)
+    const pa = lerp3(cool.a, warm.a, v)
+    const pb = lerp3(cool.b, warm.b, v)
+    const pc = lerp3(cool.c, warm.c, v)
+    const pd = lerp3(cool.d, warm.d, v)
     // Warmth nudge toward amber (independent of valence axis)
     pa[0] += features.warmth * 0.15
     pa[1] += features.warmth * 0.08
@@ -278,6 +303,8 @@ export class PlasmaRenderer implements BaseRenderer {
     gl.uniform3fv(this.uPaletteB, pb)
     gl.uniform3fv(this.uPaletteC, pc)
     gl.uniform3fv(this.uPaletteD, pd)
+    gl.uniform1f(this.uBrightness,   this.brightness)
+    gl.uniform1f(this.uDynamicRange, this.dynamicRange)
     gl.uniform1i(this.uSwCount, this.shockwaves.length)
 
     // Pack shock wave arrays into pre-allocated buffers
@@ -304,6 +331,7 @@ export class PlasmaRenderer implements BaseRenderer {
     const { gl, program, vbo } = this
     gl.deleteProgram(program)
     gl.deleteBuffer(vbo)
-    ;(gl.getExtension('WEBGL_lose_context') as { loseContext(): void } | null)?.loseContext()
+    // Note: do NOT call loseContext() — it permanently invalidates the canvas's WebGL context,
+    // which prevents rebuilding a new renderer on the same canvas element.
   }
 }

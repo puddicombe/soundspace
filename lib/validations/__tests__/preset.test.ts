@@ -147,6 +147,9 @@ describe('presetConfigSchema', () => {
       expect(result.data.warpIntensity).toBe(0.5)
       expect(result.data.gridDensity).toBe(16)
       expect(result.data.hudOpacity).toBe(0.9)
+      expect(result.data.missileRate).toBe(1.0)
+      expect(result.data.skyIntensity).toBe(1.0)
+      expect(result.data.battleIntensity).toBe(1.0)
     }
   })
 
@@ -211,6 +214,29 @@ describe('trenchRunConfigSchema', () => {
 
   it('rejects non-integer gridDensity', () => {
     expect(() => trenchRunConfigSchema.parse({ ...base, gridDensity: 16.5 })).toThrow()
+  })
+
+  it('rejects missileRate above 2.0', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, missileRate: 3.0 })).toThrow()
+  })
+
+  it('rejects missileRate below 0', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, missileRate: -0.1 })).toThrow()
+  })
+
+  it('rejects skyIntensity above 1.0', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, skyIntensity: 1.5 })).toThrow()
+  })
+
+  it('rejects battleIntensity below 0', () => {
+    expect(() => trenchRunConfigSchema.parse({ ...base, battleIntensity: -1 })).toThrow()
+  })
+
+  it('applies defaults for missileRate, skyIntensity, battleIntensity', () => {
+    const result = trenchRunConfigSchema.parse(base)
+    expect(result.missileRate).toBe(1.0)
+    expect(result.skyIntensity).toBe(1.0)
+    expect(result.battleIntensity).toBe(1.0)
   })
 })
 
@@ -285,6 +311,11 @@ describe('buildConfigForType — trenchRun branch', () => {
     warpIntensity: 0.8,
     gridDensity: 24,
     hudOpacity: 0.5,
+    scanRange: 50,
+    bankLateral: 0.7,
+    missileRate: 0.5,
+    skyIntensity: 0.8,
+    battleIntensity: 0.6,
   }
 
   it('returns default trenchRun values when switching from a non-trenchRun type', () => {
@@ -299,6 +330,9 @@ describe('buildConfigForType — trenchRun branch', () => {
       expect(result.warpIntensity).toBe(0.5)
       expect(result.gridDensity).toBe(16)
       expect(result.hudOpacity).toBe(0.9)
+      expect(result.missileRate).toBe(1.0)
+      expect(result.skyIntensity).toBe(1.0)
+      expect(result.battleIntensity).toBe(1.0)
     }
   })
 
@@ -311,6 +345,9 @@ describe('buildConfigForType — trenchRun branch', () => {
       expect(result.warpIntensity).toBe(0.8)
       expect(result.gridDensity).toBe(24)
       expect(result.hudOpacity).toBe(0.5)
+      expect(result.missileRate).toBe(0.5)
+      expect(result.skyIntensity).toBe(0.8)
+      expect(result.battleIntensity).toBe(0.6)
     }
   })
 })

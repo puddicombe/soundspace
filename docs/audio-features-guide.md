@@ -48,6 +48,23 @@ Root mean square of the time-domain waveform: `sqrt(Σ x² / N)`. The closest si
 
 ---
 
+#### `signalPresence: number` — Smoothed signal gate `[0–1]`
+
+Asymmetric exponential moving average of RMS, normalised against a noise floor of ~0.05. Rises fast (α=0.1, ~10 frames / 170ms to reach 1) when signal appears; falls slowly (α=0.02, ~50 frames / ~3s to decay to near-zero) so short inter-phrase gaps and transient silences don't cause flicker.
+
+**Why it exists.** Several features are computed from spectral *ratios* (chroma entropy for `harmonicRatio`, pairwise interval dissonance for `tension`, L2 chroma distance for `chromaNovelty`). Ratios behave pathologically near silence: a faint noise floor produces a valid-looking but meaningless chroma vector, yielding artefactual high `harmonicRatio` or non-zero `tension` values during fade-outs or quiet passages. `signalPresence` is applied as a multiplicative gate to those features internally, and is also exposed so renderers can make their own decisions.
+
+**Gated features.** `harmonicRatio`, `percussiveRatio`, `tension`, and `chromaNovelty` are all multiplied by `signalPresence` before being returned from `FeatureExtractor`. At full silence their effective value is 0; during normal playback the gate is 1 and has no effect.
+
+**Renderer uses.** Fade all visual elements out during silence (`globalAlpha = signalPresence`). Gate particle emission. Distinguish "music has stopped" from "music is quiet". Avoid showing misleading chord labels when no signal is present.
+
+```ts
+// Fade canvas opacity with the signal
+ctx.globalAlpha = 0.2 + 0.8 * features.signalPresence
+```
+
+---
+
 #### `crest: number` — Punchiness / transient sharpness `[0–1]`
 
 Peak amplitude divided by RMS, scaled so that a crest factor of 4× maps to 1.0. High crest = loud spikes relative to average = percussive. Low crest = compressed or sustained = smooth.

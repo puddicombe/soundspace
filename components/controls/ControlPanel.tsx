@@ -232,6 +232,54 @@ export function ControlPanel({ config, onConfigChange, onSavePreset, onOpenPrese
                   className="w-full accent-cyan-500"
                 />
               </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Bank lateral: {trenchConfig.bankLateral.toFixed(2)}
+                </label>
+                <input
+                  type="range" min={0.0} max={1.0} step={0.05}
+                  value={trenchConfig.bankLateral}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, bankLateral: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Missile rate: {trenchConfig.missileRate.toFixed(1)}×
+                </label>
+                <input
+                  type="range" min={0.0} max={2.0} step={0.1}
+                  value={trenchConfig.missileRate}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, missileRate: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Sky intensity: {trenchConfig.skyIntensity.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.0} max={1.0} step={0.05}
+                  value={trenchConfig.skyIntensity}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, skyIntensity: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-gray-400 text-xs uppercase tracking-wider">
+                  Battle intensity: {trenchConfig.battleIntensity.toFixed(1)}
+                </label>
+                <input
+                  type="range" min={0.0} max={1.0} step={0.05}
+                  value={trenchConfig.battleIntensity}
+                  onChange={(e) => onConfigChange({ ...trenchConfig, battleIntensity: parseFloat(e.target.value) })}
+                  className="w-full accent-cyan-500"
+                />
+              </div>
             </>
           )}
 

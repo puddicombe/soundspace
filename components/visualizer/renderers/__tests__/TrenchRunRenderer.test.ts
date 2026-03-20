@@ -33,6 +33,7 @@ function makeGlStub() {
     createBuffer: jest.fn().mockReturnValue({}),
     bindBuffer: jest.fn(),
     bufferData: jest.fn(),
+    bufferSubData: jest.fn(),
     getAttribLocation: jest.fn().mockReturnValue(0),
     enableVertexAttribArray: jest.fn(),
     vertexAttribPointer: jest.fn(),
@@ -51,7 +52,10 @@ function makeGlStub() {
     deleteBuffer: jest.fn(),
     getExtension: jest.fn().mockReturnValue(null),
     enable: jest.fn(),
+    disable: jest.fn(),
     blendFunc: jest.fn(),
+    polygonOffset: jest.fn(),
+    POLYGON_OFFSET_FILL: 0x8037,
     drawingBufferWidth: 800,
     drawingBufferHeight: 600,
   }
@@ -137,6 +141,11 @@ const defaultConfig: TrenchRunConfig = {
   warpIntensity: 0.5,
   gridDensity: 16,
   hudOpacity: 0.9,
+  scanRange: 50,
+  bankLateral: 0.7,
+  missileRate: 1.0,
+  skyIntensity: 1.0,
+  battleIntensity: 1.0,
 }
 
 describe('TrenchRunRenderer', () => {

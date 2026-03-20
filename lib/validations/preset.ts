@@ -44,11 +44,16 @@ export const plasmaConfigSchema = baseConfigSchema.extend({
 
 export const trenchRunConfigSchema = baseConfigSchema.extend({
   type: z.literal('trenchRun'),
-  scrollSpeed:   z.number().min(0.5).max(2.0).default(1.0),
-  bankIntensity: z.number().min(0.0).max(1.0).default(0.6),
-  warpIntensity: z.number().min(0.0).max(1.0).default(0.5),
-  gridDensity:   z.number().int().min(8).max(32).default(16),
-  hudOpacity:    z.number().min(0.0).max(1.0).default(0.9),
+  scrollSpeed:      z.number().min(0.5).max(2.0).default(1.0),
+  bankIntensity:    z.number().min(0.0).max(1.0).default(0.6),
+  warpIntensity:    z.number().min(0.0).max(1.0).default(0.5),
+  gridDensity:      z.number().int().min(8).max(32).default(16),
+  hudOpacity:       z.number().min(0.0).max(1.0).default(0.9),
+  scanRange:        z.number().min(10).max(120).default(50),
+  bankLateral:      z.number().min(0.0).max(1.0).default(0.7),
+  missileRate:      z.number().min(0.0).max(2.0).default(1.0),
+  skyIntensity:     z.number().min(0.0).max(1.0).default(1.0),
+  battleIntensity:  z.number().min(0.0).max(1.0).default(1.0),
 })
 
 export const presetConfigSchema = z.discriminatedUnion('type', [

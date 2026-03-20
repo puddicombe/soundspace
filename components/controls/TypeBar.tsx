@@ -51,13 +51,19 @@ export function buildConfigForType(type: VisualizerType, current: PresetConfig):
     return { ...base, type: 'plasma', fftSize: current.fftSize, brightness, dynamicRange } as PresetConfig
   }
   if (type === 'trenchRun') {
-    const scrollSpeed   = current.type === 'trenchRun' ? current.scrollSpeed   : 1.0
-    const bankIntensity = current.type === 'trenchRun' ? current.bankIntensity : 0.6
-    const warpIntensity = current.type === 'trenchRun' ? current.warpIntensity : 0.5
-    const gridDensity   = current.type === 'trenchRun' ? current.gridDensity   : 16
-    const hudOpacity    = current.type === 'trenchRun' ? current.hudOpacity    : 0.9
+    const scrollSpeed      = current.type === 'trenchRun' ? current.scrollSpeed      : 1.0
+    const bankIntensity    = current.type === 'trenchRun' ? current.bankIntensity    : 0.6
+    const warpIntensity    = current.type === 'trenchRun' ? current.warpIntensity    : 0.5
+    const gridDensity      = current.type === 'trenchRun' ? current.gridDensity      : 16
+    const hudOpacity       = current.type === 'trenchRun' ? current.hudOpacity       : 0.9
+    const scanRange        = current.type === 'trenchRun' ? current.scanRange        : 50
+    const bankLateral      = current.type === 'trenchRun' ? current.bankLateral      : 0.7
+    const missileRate      = current.type === 'trenchRun' ? current.missileRate      : 1.0
+    const skyIntensity     = current.type === 'trenchRun' ? current.skyIntensity     : 1.0
+    const battleIntensity  = current.type === 'trenchRun' ? current.battleIntensity  : 1.0
     return { ...base, type: 'trenchRun', fftSize: current.fftSize,
-             scrollSpeed, bankIntensity, warpIntensity, gridDensity, hudOpacity } as PresetConfig
+             scrollSpeed, bankIntensity, warpIntensity, gridDensity, hudOpacity, scanRange, bankLateral,
+             missileRate, skyIntensity, battleIntensity } as PresetConfig
   }
   // bars
   return { ...base, type: 'bars', fftSize: current.fftSize, barCount: 64, mirrorBars: true }
