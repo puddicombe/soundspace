@@ -40,7 +40,7 @@ const float TUNNEL_LENGTH = 80.0;
 
 void main() {
   vec3 pos = a_position;
-  pos.z = mod(pos.z + u_zOffset, TUNNEL_LENGTH) - TUNNEL_LENGTH * 0.5;
+  pos.z = mod(pos.z - u_zOffset, TUNNEL_LENGTH) - TUNNEL_LENGTH * 0.5;
   pos.xy *= 1.0 + u_bassBreath * 0.08;
   gl_Position = u_mvp * vec4(pos, 1.0);
   float r2 = dot(gl_Position.xy, gl_Position.xy);
@@ -175,8 +175,8 @@ const TUNNEL_LENGTH    = 80.0
 const TRENCH_W         = 6.0   // half-width; walls at x = ±TRENCH_W
 const TRENCH_H         = 3.0   // floor at y = -TRENCH_H
 const TRENCH_TOP       = 5.0   // walls extend to y = +TRENCH_TOP (open above)
-const BASE_SCAN_RANGE  = 20.0  // visible distance at silence
-const SCAN_RANGE_DELTA = 40.0  // additional range added at full RMS
+const BASE_SCAN_RANGE  = 35.0  // visible distance at silence
+const SCAN_RANGE_DELTA = 35.0  // additional range added at full RMS
 
 // ---------------------------------------------------------------------------
 // Scanline overlay helper
