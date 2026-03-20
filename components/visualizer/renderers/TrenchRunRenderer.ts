@@ -175,8 +175,8 @@ const TUNNEL_LENGTH    = 80.0
 const TRENCH_W         = 6.0   // half-width; walls at x = ±TRENCH_W
 const TRENCH_H         = 3.0   // floor at y = -TRENCH_H
 const TRENCH_TOP       = 5.0   // walls extend to y = +TRENCH_TOP (open above)
-const BASE_SCAN_RANGE  = 35.0  // visible distance at silence
-const SCAN_RANGE_DELTA = 35.0  // additional range added at full RMS
+const BASE_SCAN_RANGE  = 30.0  // visible distance at silence
+const SCAN_RANGE_DELTA = 50.0  // additional range at full energy (rms normalised to 0.1 = loud)
 
 // ---------------------------------------------------------------------------
 // Scanline overlay helper
@@ -418,7 +418,9 @@ export class TrenchRunRenderer implements BaseRenderer {
     gl.uniform1f(this.u_warpAmountLoc, warpAmount)
     _colorBuf[0] = r; _colorBuf[1] = g; _colorBuf[2] = b
     gl.uniform3fv(this.u_colorLoc, _colorBuf)
-    const scanRange = BASE_SCAN_RANGE + this.smoothedRms * SCAN_RANGE_DELTA
+    // features.rms is raw amplitude (typical loud music ≈ 0.05–0.15); scale up to get perceptible range
+    const normEnergy = Math.min(this.smoothedRms / 0.08, 1.0)
+    const scanRange = BASE_SCAN_RANGE + normEnergy * SCAN_RANGE_DELTA
     gl.uniform1f(this.u_scanRangeLoc, scanRange)
 
     // Clear
