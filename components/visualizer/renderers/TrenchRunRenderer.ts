@@ -591,9 +591,8 @@ export class TrenchRunRenderer implements BaseRenderer {
     // Store continuous (non-onset) scroll speed for missile speed floor
     this.frameScrollDelta = computeScrollDelta(this.smoothedRms, dt, false) * this.scrollSpeed * bpmFactor
 
-    // Bank
+    // Time (used by bank oscillators and sky effects)
     this.time += dt
-    const bankAngle = computeBankAngle(this.time, this.smoothedRms, this.bankIntensity)
 
     // Warp
     const warpAmount = computeWarpAmount(this.smoothedBass, this.warpIntensity)
@@ -1106,7 +1105,7 @@ export class TrenchRunRenderer implements BaseRenderer {
 
   private buildTurretVerts(): void {
     const v = this.turretVerts
-    let si = 0   // structure vertex index
+    const si = 0   // structure vertex index (reserved for future use)
     const structVerts:  number[] = []
     const missileVertGroups: number[][] = Array.from({ length: MISSILE_COLORS.length }, () => [])
     const debrisVerts:  number[] = []  // yellow — flying debris

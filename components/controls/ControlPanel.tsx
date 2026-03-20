@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig, PlasmaConfig, TrenchRunConfig } from '@/lib/validations/preset'
+import type { PresetConfig, BarsConfig, PlasmaConfig, TrenchRunConfig } from '@/lib/validations/preset'
 import { COLOR_SCHEMES, FFT_SIZES } from '@/lib/validations/preset'
 import { buildConfigForType, type VisualizerType } from './TypeBar'
 

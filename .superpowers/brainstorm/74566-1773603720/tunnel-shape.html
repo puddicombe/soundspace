@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tunnel Shape</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; font-family:monospace; padding:16px; }
+  h1 { font-size:13px; color:#0cc; letter-spacing:3px; text-transform:uppercase; margin-bottom:4px; }
+  .sub { font-size:10px; color:#044; letter-spacing:2px; margin-bottom:14px; }
+  .q { font-size:11px; color:#0aa; letter-spacing:1px; margin-bottom:12px; }
+  .row { display:flex; gap:20px; flex-wrap:wrap; }
+  .col { display:flex; flex-direction:column; gap:6px; }
+  .lbl { font-size:9px; color:#066; letter-spacing:2px; text-transform:uppercase; }
+  .cap { font-size:10px; color:#055; line-height:1.5; max-width:240px; margin-top:4px; }
+  canvas { display:block; border:1px solid #0a2a1a; cursor:pointer; transition:box-shadow .15s; }
+  canvas:hover { box-shadow:0 0 12px #0cc; }
+  canvas.sel { box-shadow:0 0 20px #0ff,0 0 4px #0ff; border-color:#0ff; }
+</style>
+</head>
+<body>
+<h1>Tunnel Shape</h1>
+<div class="sub">SoundSpace // TunnelRenderer</div>
+<div class="q">How does the tunnel behave as the music changes?</div>
+<div class="row">
+
+  <div class="col">
+    <div class="lbl">A — Straight, always ahead</div>
+    <canvas id="cA" width="240" height="190"></canvas>
+    <div class="cap">Clean, locked-forward flight. The grid is the show — no camera deviation. Calm music = faint grid, intense music = blazing grid.</div>
+  </div>
+
+  <div class="col">
+    <div class="lbl">B — Banks & curves with music</div>
+    <canvas id="cB" width="240" height="190"></canvas>
+    <div class="cap">Vanishing point drifts left/right/up/down based on audio. Feels like the ship is banking through the canyon. Driven by spectral tilt or low-freq balance.</div>
+  </div>
+
+  <div class="col">
+    <div class="lbl">C — Straight with warp on drops</div>
+    <canvas id="cC" width="240" height="190"></canvas>
+    <div class="cap">Normally straight-ahead, but on high-energy moments the tunnel twists/compresses (barrel distortion on the grid). Like hitting a jump to lightspeed burst.</div>
+  </div>
+
+</div>
+<script>
+function g(ctx,col,b){ctx.shadowColor=col;ctx.shadowBlur=b||8;}
+function ln(ctx,x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+
+function drawGrid(ctx, W, H, vpx, vpy, gridColor, accentColor, distort) {
+  const rows=9, cols=10;
+
+  // Floor radials
+  for(let c=0; c<=cols; c++){
+    const t=c/cols;
+    const xNear = t*W;
+    const isAcc = c%2===0;
+    ctx.globalAlpha = isAcc ? 0.45 : 0.18;
+    ctx.strokeStyle = isAcc ? accentColor : gridColor;
+    ctx.lineWidth = isAcc ? 1 : 0.5;
+    g(ctx, isAcc ? accentColor : gridColor, isAcc ? 7 : 2);
+    ln(ctx, vpx, vpy, xNear, H);
+    ctx.globalAlpha *= 0.4;
+    ln(ctx, vpx, vpy, xNear, 0);
+  }
+
+  // Horizontal rings — curved
+  for(let r=1; r<=rows; r++){
+    const t=r/rows;
+    const yFloor = vpy + Math.pow(t,0.55)*(H-vpy);
+    const yCeil  = vpy - Math.pow(t,0.55)*vpy;
+    const xL = vpx - Math.pow(t,0.55)*vpx;
+    const xR = vpx + Math.pow(t,0.55)*(W-vpx);
+    const isAcc = r%3===0;
+    ctx.globalAlpha = 0.12 + t*0.7;
+    ctx.strokeStyle = isAcc ? accentColor : gridColor;
+    ctx.lineWidth = isAcc ? 1.2 : 0.5;
+    g(ctx, isAcc ? accentColor : gridColor, isAcc ? 8 : 3);
+
+    // Barrel distort: bow the horizontal lines outward for warp effect
+    const bow = distort * (1-t) * 20;
+
+    ctx.beginPath();
+    ctx.moveTo(xL, yFloor);
+    ctx.quadraticCurveTo(vpx, yFloor + bow, xR, yFloor);
+    ctx.stroke();
+
+    ctx.globalAlpha *= 0.5;
+    ctx.beginPath();
+    ctx.moveTo(xL, yCeil);
+    ctx.quadraticCurveTo(vpx, yCeil - bow, xR, yCeil);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawReticle(ctx, cx, cy, r, color){
+  ctx.strokeStyle=color; ctx.lineWidth=1.5;
+  g(ctx, color, 14);
+  const b=r*0.45;
+  [[cx-r,cy-r],[cx+r,cy-r],[cx-r,cy+r],[cx+r,cy+r]].forEach(([x,y])=>{
+    const sx=x<cx?1:-1, sy=y<cy?1:-1;
+    ln(ctx,x,y,x+sx*b,y); ln(ctx,x,y,x,y+sy*b);
+  });
+  ctx.lineWidth=0.6; ctx.globalAlpha=0.4;
+  ln(ctx,cx-r,cy,cx-8,cy); ln(ctx,cx+8,cy,cx+r,cy);
+  ln(ctx,cx,cy-r,cx,cy-8); ln(ctx,cx,cy+8,cx,cy+r);
+  ctx.globalAlpha=1;
+}
+
+function drawBrackets(ctx,W,H,color){
+  ctx.strokeStyle=color; ctx.lineWidth=1;
+  g(ctx,color,4);
+  const m=6,l=14;
+  ln(ctx,m,m,m+l,m);ln(ctx,m,m,m,m+l);
+  ln(ctx,W-m,m,W-m-l,m);ln(ctx,W-m,m,W-m,m+l);
+  ln(ctx,m,H-m,m+l,H-m);ln(ctx,m,H-m,m,H-m-l);
+  ln(ctx,W-m,H-m,W-m-l,H-m);ln(ctx,W-m,H-m,W-m,H-m-l);
+}
+
+function drawVP(ctx,x,y,color){
+  g(ctx,color,22); ctx.fillStyle=color;
+  ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+}
+
+// A — straight ahead, VP dead centre
+(function(){
+  const c=document.getElementById('cA'),ctx=c.getContext('2d');
+  const W=c.width,H=c.height,cx=W/2,cy=H/2;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  drawGrid(ctx,W,H,cx,cy,'#003344','#00bbcc',0);
+  drawReticle(ctx,cx,cy,26,'#ffaa00');
+  drawBrackets(ctx,W,H,'#006677');
+  drawVP(ctx,cx,cy,'#00ddff');
+  // Label VP
+  ctx.font='7px monospace'; ctx.fillStyle='#006677'; ctx.globalAlpha=0.8;
+  ctx.fillText('VP: FIXED',cx-22,cy+40);
+  ctx.globalAlpha=1;
+})();
+
+// B — VP shifted off-centre (banking left)
+(function(){
+  const c=document.getElementById('cB'),ctx=c.getContext('2d');
+  const W=c.width,H=c.height;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  // VP drifted left and slightly up — mid-bank
+  const vpx=W*0.35, vpy=H*0.42;
+  drawGrid(ctx,W,H,vpx,vpy,'#003344','#00bbcc',0);
+  // Reticle stays screen-centre (HUD fixed), VP has moved
+  drawReticle(ctx,W/2,H/2,26,'#ffaa00');
+  drawBrackets(ctx,W,H,'#006677');
+  drawVP(ctx,vpx,vpy,'#00ddff');
+  // Arrow hinting drift direction
+  ctx.strokeStyle='#ffaa00'; ctx.lineWidth=1; ctx.globalAlpha=0.4;
+  g(ctx,'#ffaa00',6);
+  ln(ctx,W/2,H/2, vpx+10,vpy+6);
+  ctx.globalAlpha=1;
+  ctx.font='7px monospace'; ctx.fillStyle='#006677'; ctx.globalAlpha=0.8;
+  ctx.fillText('VP: DRIFTS',vpx-10,vpy+20);
+  ctx.globalAlpha=1;
+})();
+
+// C — straight ahead but barrel-distorted rings (warp burst)
+(function(){
+  const c=document.getElementById('cC'),ctx=c.getContext('2d');
+  const W=c.width,H=c.height,cx=W/2,cy=H/2;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  drawGrid(ctx,W,H,cx,cy,'#003344','#00bbcc',1.4); // distort=1.4
+  drawReticle(ctx,cx,cy,26,'#ffaa00');
+  drawBrackets(ctx,W,H,'#006677');
+  drawVP(ctx,cx,cy,'#00ddff');
+  // Extra bright outer ring (warp pulse)
+  ctx.strokeStyle='#00ffff'; ctx.lineWidth=1.5; ctx.globalAlpha=0.35;
+  g(ctx,'#00ffff',18);
+  ctx.beginPath();ctx.arc(cx,cy,70,0,Math.PI*2);ctx.stroke();
+  ctx.globalAlpha=1;
+  ctx.font='7px monospace'; ctx.fillStyle='#006677'; ctx.globalAlpha=0.8;
+  ctx.fillText('WARP BURST',cx-28,cy+46);
+  ctx.globalAlpha=1;
+})();
+
+document.querySelectorAll('canvas').forEach(cv=>{
+  cv.addEventListener('click',function(){
+    this.classList.toggle('sel');
+    if(window.__logChoice) window.__logChoice(this.id,this.id);
+  });
+});
+</script>
+</body>
+</html>

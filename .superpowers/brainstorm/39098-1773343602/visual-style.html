@@ -1,0 +1,64 @@
+<h2>Visual Style Direction</h2>
+<p class="subtitle">Which aesthetic feels right for Soundspace?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="dark-neon" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0a0a0f;height:160px;display:flex;align-items:flex-end;justify-content:center;padding:16px;gap:4px;overflow:hidden">
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#a855f7);height:40%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#c084fc);height:75%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#e879f9);height:95%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#f0abfc);height:60%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#e879f9);height:80%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#c084fc);height:55%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#7c3aed,#a855f7);height:35%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#4f46e5,#818cf8);height:65%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#4f46e5,#a5b4fc);height:90%;border-radius:3px 3px 0 0"></div>
+      <div style="width:8px;background:linear-gradient(to top,#4f46e5,#818cf8);height:50%;border-radius:3px 3px 0 0"></div>
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(168,85,247,0.15),transparent 70%)"></div>
+    </div>
+    <div class="card-body">
+      <h3>Dark Neon</h3>
+      <p>Pure black canvas, vivid purple/cyan glow gradients. High contrast, electric feel — the classic music visualiser aesthetic.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="deep-space" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg,#0f0c29,#1a1040,#24243e);height:160px;display:flex;align-items:flex-end;justify-content:center;padding:16px;gap:4px;overflow:hidden;position:relative">
+      <div style="width:8px;background:linear-gradient(to top,#06b6d4,#67e8f9);height:40%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#0891b2,#7dd3fc);height:70%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#0e7490,#bae6fd);height:90%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#06b6d4,#93c5fd);height:60%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#0891b2,#7dd3fc);height:85%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#0e7490,#bae6fd);height:55%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#06b6d4,#67e8f9);height:45%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#0891b2,#93c5fd);height:75%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="width:8px;background:linear-gradient(to top,#0e7490,#7dd3fc);height:50%;border-radius:3px 3px 0 0;opacity:0.9"></div>
+      <div style="position:absolute;top:8px;left:20px;width:3px;height:3px;background:white;border-radius:50%;opacity:0.8"></div>
+      <div style="position:absolute;top:25px;right:30px;width:2px;height:2px;background:white;border-radius:50%;opacity:0.6"></div>
+      <div style="position:absolute;top:15px;left:60%;width:2px;height:2px;background:white;border-radius:50%;opacity:0.7"></div>
+    </div>
+    <div class="card-body">
+      <h3>Deep Space</h3>
+      <p>Dark blue-indigo gradient background with cyan/ice bars. Cinematic, immersive — feels like peering into a galaxy.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="minimal-mono" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#111;height:160px;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;position:relative">
+      <!-- waveform style -->
+      <svg width="100%" height="80" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="0,40 20,38 40,28 60,15 80,32 100,10 120,35 140,5 160,30 180,12 200,38 220,20 240,35 260,25 280,40 300,38"
+          fill="none" stroke="#e5e5e5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="0" y1="40" x2="300" y2="40" stroke="#333" stroke-width="0.5"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>Minimal Mono</h3>
+      <p>Near-black background, clean white/grey waveform lines. Understated and elegant — lets the motion speak.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem">Click to select — or describe what you have in mind in the terminal</p>

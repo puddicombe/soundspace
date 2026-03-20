@@ -11,7 +11,6 @@ import { TrenchRunRenderer } from './renderers/TrenchRunRenderer'
 import { ChordTestOverlay } from './ChordTestOverlay'
 import type { BaseRenderer } from './renderers/BaseRenderer'
 import type { AudioFeatures } from './AudioFeatures'
-import { NULL_FEATURES } from './AudioFeatures'
 import type { PresetConfig, BarsConfig, SpectrumConfig, FeaturesConfig, ChordsConfig, PlasmaConfig, TrenchRunConfig } from '@/lib/validations/preset'
 
 interface Props {

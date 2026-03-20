@@ -11,7 +11,7 @@ const COLOR_ACCENT: Record<FeaturesConfig['colorScheme'], { primary: string; dim
 }
 
 const FONT = '"Courier New", Courier, monospace'
-const SECTION_TITLES = ['ENERGY', 'BAND ENERGY', 'TIMBRE', 'CHROMA', 'RHYTHM', 'AFFECT'] as const
+const __SECTION_TITLES = ['ENERGY', 'BAND ENERGY', 'TIMBRE', 'CHROMA', 'RHYTHM', 'AFFECT'] as const
 
 function hzToNoteName(hz: number): string {
   const midi = Math.round(12 * Math.log2(hz / 440) + 69)
@@ -56,7 +56,7 @@ export class FeaturesRenderer implements BaseRenderer {
     const panelH = (height - PAD * 4) / 3
 
     // 6 panels in a 2×3 grid
-    const panels: Array<{ col: number; row: number; title: typeof SECTION_TITLES[number] }> = [
+    const panels: Array<{ col: number; row: number; title: typeof _SECTION_TITLES[number] }> = [
       { col: 0, row: 0, title: 'ENERGY' },
       { col: 1, row: 0, title: 'BAND ENERGY' },
       { col: 0, row: 1, title: 'TIMBRE' },
@@ -96,7 +96,7 @@ export class FeaturesRenderer implements BaseRenderer {
 
   private drawPanel(
     x: number, y: number, w: number, h: number,
-    title: typeof SECTION_TITLES[number],
+    title: typeof _SECTION_TITLES[number],
     f: AudioFeatures,
     accent: { primary: string; dim: string; grid: string; bg: string }
   ) {

@@ -1,0 +1,6 @@
+{"type":"server-started","port":58632,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:58632","screen_dir":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/39098-1773343602"}
+{"type":"screen-added","file":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/39098-1773343602/visual-style.html"}
+{"source":"user-event","type":"click","text":"Dark Neon\n      Pure black canvas, vivid purple/cyan glow gradients. High contrast, electric feel — the classic music visualiser aesthetic.","choice":"dark-neon","id":null,"timestamp":1773344186086}
+{"source":"user-event","type":"click","text":"Dark Neon\n      Pure black canvas, vivid purple/cyan glow gradients. High contrast, electric feel — the classic music visualiser aesthetic.","choice":"dark-neon","id":null,"timestamp":1773344203171}
+{"type":"screen-added","file":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/39098-1773343602/waiting-1.html"}
+{"type":"server-stopped","reason":"owner process exited"}
