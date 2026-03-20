@@ -4,7 +4,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3390:3000"
     environment:
       DATABASE_URL: postgres://soundspace:${POSTGRES_PASSWORD}@db:5432/soundspace
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
