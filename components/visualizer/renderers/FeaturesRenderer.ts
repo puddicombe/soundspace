@@ -55,7 +55,7 @@ export class FeaturesRenderer implements BaseRenderer {
     const panelH = (height - PAD * 4) / 3
 
     // 6 panels in a 2×3 grid
-    const panels: Array<{ col: number; row: number; title: typeof _SECTION_TITLES[number] }> = [
+    const panels: Array<{ col: number; row: number; title: 'ENERGY' | 'BAND ENERGY' | 'TIMBRE' | 'CHROMA' | 'RHYTHM' | 'AFFECT' }> = [
       { col: 0, row: 0, title: 'ENERGY' },
       { col: 1, row: 0, title: 'BAND ENERGY' },
       { col: 0, row: 1, title: 'TIMBRE' },
