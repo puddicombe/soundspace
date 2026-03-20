@@ -57,9 +57,11 @@ out vec4 fragColor;
 uniform vec3 u_color;
 uniform float u_alpha;
 uniform float u_beatFlash;
+uniform float u_scanRange;
 
 void main() {
-  float depthFade = 1.0 / (1.0 + v_depth * v_depth * 0.001);
+  float nd = v_depth / u_scanRange;
+  float depthFade = 1.0 / (1.0 + nd * nd);
   float brightness = 1.0 + u_beatFlash * 0.5;
   fragColor = vec4(u_color * brightness, u_alpha * depthFade);
 }
@@ -169,9 +171,12 @@ function compileShader(gl: WebGL2RenderingContext, type: number, src: string): W
 // Tunnel geometry constants
 // ---------------------------------------------------------------------------
 
-const TUNNEL_LENGTH = 80.0
-const RING_COUNT = 32
-const RADIUS = 5.0
+const TUNNEL_LENGTH    = 80.0
+const TRENCH_W         = 6.0   // half-width; walls at x = ±TRENCH_W
+const TRENCH_H         = 3.0   // floor at y = -TRENCH_H
+const TRENCH_TOP       = 5.0   // walls extend to y = +TRENCH_TOP (open above)
+const BASE_SCAN_RANGE  = 20.0  // visible distance at silence
+const SCAN_RANGE_DELTA = 40.0  // additional range added at full RMS
 
 // ---------------------------------------------------------------------------
 // Scanline overlay helper
@@ -212,11 +217,10 @@ export class TrenchRunRenderer implements BaseRenderer {
   private u_warpAmountLoc: WebGLUniformLocation | null
   private u_colorLoc: WebGLUniformLocation | null
   private u_alphaLoc: WebGLUniformLocation | null
+  private u_scanRangeLoc: WebGLUniformLocation | null
 
   // Geometry layout
   private segmentCount: number
-  private floorOffset: number
-  private floorVertexCount: number
 
   // Animation state
   private lastTime: number = 0
@@ -266,54 +270,48 @@ export class TrenchRunRenderer implements BaseRenderer {
     this.colorScheme = config.colorScheme
     this.segmentCount = config.gridDensity
 
-    // Build tunnel geometry
-    const segmentCount = this.segmentCount
-    const floorCols = Math.floor(segmentCount / 2)
-    const floorCrossLines = 8
+    // Build rectangular trench geometry
+    // Layout: [floor | left wall | right wall], each face = gridDensity*4 vertices
+    const N = config.gridDensity
 
-    const ringVertices = RING_COUNT * segmentCount
-    const railVertices = segmentCount * 2
-    const floorForwardVertices = floorCols * 2
-    const floorCrossVertices = floorCrossLines * 2
-    this.floorVertexCount = floorForwardVertices + floorCrossVertices
-    this.floorOffset = ringVertices + railVertices
-
-    const totalVertices = ringVertices + railVertices + this.floorVertexCount
+    const totalVertices = N * 4 * 3  // 3 faces × 4N verts
     const positions = new Float32Array(totalVertices * 3)
     let idx = 0
 
-    // Rings
-    for (let ring = 0; ring < RING_COUNT; ring++) {
-      const z = (ring / RING_COUNT) * TUNNEL_LENGTH
-      for (let seg = 0; seg < segmentCount; seg++) {
-        const angle = (seg / segmentCount) * Math.PI * 2
-        positions[idx++] = Math.cos(angle) * RADIUS
-        positions[idx++] = Math.sin(angle) * RADIUS
-        positions[idx++] = z
-      }
+    // FLOOR (y = -TRENCH_H, x from -TRENCH_W to +TRENCH_W)
+    for (let i = 0; i < N; i++) {
+      const x = -TRENCH_W + (2 * TRENCH_W * i) / (N - 1)
+      positions[idx++] = x; positions[idx++] = -TRENCH_H; positions[idx++] = 0
+      positions[idx++] = x; positions[idx++] = -TRENCH_H; positions[idx++] = TUNNEL_LENGTH
+    }
+    for (let i = 0; i < N; i++) {
+      const z = (i / (N - 1)) * TUNNEL_LENGTH
+      positions[idx++] = -TRENCH_W; positions[idx++] = -TRENCH_H; positions[idx++] = z
+      positions[idx++] =  TRENCH_W; positions[idx++] = -TRENCH_H; positions[idx++] = z
     }
 
-    // Rails (LINES pairs: near z=0, far z=TUNNEL_LENGTH)
-    for (let seg = 0; seg < segmentCount; seg++) {
-      const angle = (seg / segmentCount) * Math.PI * 2
-      const x = Math.cos(angle) * RADIUS
-      const y = Math.sin(angle) * RADIUS
-      positions[idx++] = x; positions[idx++] = y; positions[idx++] = 0
-      positions[idx++] = x; positions[idx++] = y; positions[idx++] = TUNNEL_LENGTH
+    // LEFT WALL (x = -TRENCH_W, y from -TRENCH_H to +TRENCH_TOP)
+    for (let i = 0; i < N; i++) {
+      const y = -TRENCH_H + (TRENCH_H + TRENCH_TOP) * i / (N - 1)
+      positions[idx++] = -TRENCH_W; positions[idx++] = y; positions[idx++] = 0
+      positions[idx++] = -TRENCH_W; positions[idx++] = y; positions[idx++] = TUNNEL_LENGTH
+    }
+    for (let i = 0; i < N; i++) {
+      const z = (i / (N - 1)) * TUNNEL_LENGTH
+      positions[idx++] = -TRENCH_W; positions[idx++] = -TRENCH_H; positions[idx++] = z
+      positions[idx++] = -TRENCH_W; positions[idx++] =  TRENCH_TOP; positions[idx++] = z
     }
 
-    // Floor forward lines
-    for (let col = 0; col < floorCols; col++) {
-      const x = -RADIUS + (2 * RADIUS * col) / (floorCols - 1 || 1)
-      positions[idx++] = x; positions[idx++] = -RADIUS; positions[idx++] = 0
-      positions[idx++] = x; positions[idx++] = -RADIUS; positions[idx++] = TUNNEL_LENGTH
+    // RIGHT WALL (x = +TRENCH_W, y from -TRENCH_H to +TRENCH_TOP)
+    for (let i = 0; i < N; i++) {
+      const y = -TRENCH_H + (TRENCH_H + TRENCH_TOP) * i / (N - 1)
+      positions[idx++] = TRENCH_W; positions[idx++] = y; positions[idx++] = 0
+      positions[idx++] = TRENCH_W; positions[idx++] = y; positions[idx++] = TUNNEL_LENGTH
     }
-
-    // Floor cross lines
-    for (let i = 0; i < floorCrossLines; i++) {
-      const z = (i / (floorCrossLines - 1)) * TUNNEL_LENGTH
-      positions[idx++] = -RADIUS; positions[idx++] = -RADIUS; positions[idx++] = z
-      positions[idx++] = RADIUS;  positions[idx++] = -RADIUS; positions[idx++] = z
+    for (let i = 0; i < N; i++) {
+      const z = (i / (N - 1)) * TUNNEL_LENGTH
+      positions[idx++] = TRENCH_W; positions[idx++] = -TRENCH_H; positions[idx++] = z
+      positions[idx++] = TRENCH_W; positions[idx++] =  TRENCH_TOP; positions[idx++] = z
     }
 
     // Upload buffer
@@ -336,6 +334,7 @@ export class TrenchRunRenderer implements BaseRenderer {
     this.u_warpAmountLoc = gl.getUniformLocation(program, 'u_warpAmount')
     this.u_colorLoc = gl.getUniformLocation(program, 'u_color')
     this.u_alphaLoc = gl.getUniformLocation(program, 'u_alpha')
+    this.u_scanRangeLoc = gl.getUniformLocation(program, 'u_scanRange')
 
     // Initial GL state
     gl.clearColor(0, 0, 0, 1)
@@ -419,6 +418,8 @@ export class TrenchRunRenderer implements BaseRenderer {
     gl.uniform1f(this.u_warpAmountLoc, warpAmount)
     _colorBuf[0] = r; _colorBuf[1] = g; _colorBuf[2] = b
     gl.uniform3fv(this.u_colorLoc, _colorBuf)
+    const scanRange = BASE_SCAN_RANGE + this.smoothedRms * SCAN_RANGE_DELTA
+    gl.uniform1f(this.u_scanRangeLoc, scanRange)
 
     // Clear
     gl.clear(gl.COLOR_BUFFER_BIT)
@@ -438,15 +439,10 @@ export class TrenchRunRenderer implements BaseRenderer {
     this.drawHud(features)
   }
 
-  private drawGeometry(gl: WebGL2RenderingContext, segmentCount: number): void {
-    // Rings
-    for (let i = 0; i < RING_COUNT; i++) {
-      gl.drawArrays(gl.LINE_LOOP, i * segmentCount, segmentCount)
-    }
-    // Rails
-    gl.drawArrays(gl.LINES, RING_COUNT * segmentCount, segmentCount * 2)
-    // Floor
-    gl.drawArrays(gl.LINES, this.floorOffset, this.floorVertexCount)
+  private drawGeometry(gl: WebGL2RenderingContext, N: number): void {
+    gl.drawArrays(gl.LINES, 0,     N * 4)  // floor
+    gl.drawArrays(gl.LINES, N * 4, N * 4)  // left wall
+    gl.drawArrays(gl.LINES, N * 8, N * 4)  // right wall
   }
 
   private drawHud(features: AudioFeatures): void {
