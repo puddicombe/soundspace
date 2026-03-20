@@ -1,7 +1,0 @@
-{"type":"server-started","port":49216,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:49216","screen_dir":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/72944-1773519857"}
-{"type":"screen-added","file":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/72944-1773519857/aesthetic-world.html"}
-{"source":"user-event","type":"click","text":"Fluid Dynamics\n      Ink in water, lava lamp, interference waves. Sound creates pressure waves that visibly disturb a fluid medium — calm music produces gentle eddies, intense music causes turbulent collisions.","choice":"liquid","id":null,"timestamp":1773519996290}
-{"type":"screen-added","file":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/72944-1773519857/fluid-style.html"}
-{"type":"screen-added","file":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/72944-1773519857/waiting.html"}
-{"type":"screen-added","file":"/Users/jamespuddicombe/code/soundspace/.superpowers/brainstorm/72944-1773519857/emotional-mapping.html"}
-{"type":"server-stopped","reason":"idle timeout"}
