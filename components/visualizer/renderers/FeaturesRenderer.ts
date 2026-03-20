@@ -11,7 +11,6 @@ const COLOR_ACCENT: Record<FeaturesConfig['colorScheme'], { primary: string; dim
 }
 
 const FONT = '"Courier New", Courier, monospace'
-const __SECTION_TITLES = ['ENERGY', 'BAND ENERGY', 'TIMBRE', 'CHROMA', 'RHYTHM', 'AFFECT'] as const
 
 function hzToNoteName(hz: number): string {
   const midi = Math.round(12 * Math.log2(hz / 440) + 69)
